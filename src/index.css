@@ -2,76 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Professional Skill Matrix Design System - All colors MUST be HSL */
+/* Skill Matrix Design System - Professional Corporate Theme */
 
 @layer base {
   :root {
-    /* Base colors - Professional blue/slate palette */
-    --background: 220 20% 97%;
-    --foreground: 220 15% 15%;
+    /* Typography */
+    --font-sans: 'Inter', system-ui, sans-serif;
+    
+    /* Core Color Palette - Professional minimal theme */
+    --background: 0 0% 98%; /* Clean white background */
+    --foreground: 220 14% 11%; /* Dark charcoal text */
 
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 15%;
+    --card-foreground: 220 14% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 15%;
+    --popover-foreground: 220 14% 11%;
 
-    /* Primary - Professional blue */
-    --primary: 217 91% 60%;
+    /* Primary Professional Blue */
+    --primary: 216 34% 17%; /* Deep navy blue */
+    --primary-light: 216 34% 27%; /* Lighter navy */
+    --primary-dark: 216 34% 12%; /* Darker navy */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 217 91% 55%;
 
-    /* Secondary - Light blue/gray */
-    --secondary: 220 20% 94%;
-    --secondary-foreground: 220 15% 25%;
+    /* Secondary Neutral */
+    --secondary: 220 13% 91%; /* Light gray */
+    --secondary-light: 220 13% 95%; /* Very light gray */
+    --secondary-foreground: 220 14% 11%;
 
-    --muted: 220 15% 95%;
-    --muted-foreground: 220 10% 50%;
+    /* Neutral Grays */
+    --muted: 220 13% 95%; /* Very light gray */
+    --muted-foreground: 220 9% 46%; /* Medium gray */
 
-    --accent: 217 70% 96%;
-    --accent-foreground: 217 91% 60%;
+    --accent: 220 13% 95%;
+    --accent-foreground: 220 14% 11%;
 
-    --destructive: 0 85% 60%;
+    /* Status Colors */
+    --success: 142 71% 45%; /* green-600 */
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%; /* amber-500 */
+    --warning-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%; /* red-500 */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 217 91% 60%;
+    /* Borders and Inputs */
+    --border: 220 13% 91%; /* gray-200 */
+    --input: 220 13% 91%;
+    --ring: 224 76% 48%;
 
-    /* Skill Level Colors */
-    --skill-none: 220 10% 85%;
-    --skill-beginner: 0 85% 65%;
-    --skill-intermediate: 35 85% 60%;
-    --skill-advanced: 120 60% 50%;
-    --skill-expert: 145 70% 40%;
+    /* Skill Rating Colors */
+    --skill-high: 142 71% 45%; /* green-600 */
+    --skill-medium: 38 92% 50%; /* amber-500 */
+    --skill-low: 20 91% 48%; /* orange-600 */
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 70%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 20% 98%));
-    --gradient-header: linear-gradient(135deg, hsl(220 25% 15%), hsl(220 20% 25%));
+    --gradient-primary: linear-gradient(135deg, hsl(224 76% 48%), hsl(263 70% 50%));
+    --gradient-secondary: linear-gradient(135deg, hsl(262 68% 56%), hsl(224 86% 42%));
+    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%), hsl(155 62% 48%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(240 5% 98%));
 
     /* Shadows */
-    --shadow-card: 0 4px 20px -2px hsl(220 20% 20% / 0.08);
-    --shadow-hover: 0 8px 30px -4px hsl(220 20% 20% / 0.12);
-    --shadow-primary: 0 4px 20px -2px hsl(217 91% 60% / 0.3);
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.06);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.1), 0 4px 6px -2px hsl(0 0% 0% / 0.05);
+    --shadow-glow: 0 0 20px hsl(224 76% 48% / 0.3);
 
-    --radius: 0.5rem;
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s ease-out;
 
-    --sidebar-background: 0 0% 98%;
+    --radius: 0.75rem;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
+    /* Sidebar Colors */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 14% 11%;
+    --sidebar-primary: 216 34% 17%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 13% 95%;
+    --sidebar-accent-foreground: 220 14% 11%;
     --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 216 34% 17%;
   }
 
   .dark {
@@ -102,14 +114,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -119,6 +123,6 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 }
