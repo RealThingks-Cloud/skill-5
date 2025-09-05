@@ -21,11 +21,15 @@ const Skills = () => {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [showAddSkill, setShowAddSkill] = useState(false);
+  const [showManageCategories, setShowManageCategories] = useState(false);
+  const [showManageSkills, setShowManageSkills] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryDescription, setNewCategoryDescription] = useState("");
   const [newSkillName, setNewSkillName] = useState("");
   const [newSkillDescription, setNewSkillDescription] = useState("");
+  const [editingCategory, setEditingCategory] = useState<SkillCategory | null>(null);
+  const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   
   const { profile, isManagerOrAbove } = useAuth();
   const { toast } = useToast();
@@ -149,6 +153,119 @@ const Skills = () => {
     }
   };
 
+  const handleEditCategory = async (category: SkillCategory) => {
+    if (!category.name.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from('skill_categories')
+        .update({
+          name: category.name,
+          description: category.description
+        })
+        .eq('id', category.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Category updated successfully",
+      });
+      
+      setEditingCategory(null);
+      fetchData();
+    } catch (error) {
+      console.error('Error updating category:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update category",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    try {
+      const { error } = await supabase
+        .from('skill_categories')
+        .delete()
+        .eq('id', categoryId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Category deleted successfully",
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete category",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditSkill = async (skill: Skill) => {
+    if (!skill.name.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from('skills')
+        .update({
+          name: skill.name,
+          description: skill.description,
+          category_id: skill.category_id
+        })
+        .eq('id', skill.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Skill updated successfully",
+      });
+      
+      setEditingSkill(null);
+      fetchData();
+    } catch (error) {
+      console.error('Error updating skill:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update skill",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteSkill = async (skillId: string) => {
+    try {
+      const { error } = await supabase
+        .from('skills')
+        .delete()
+        .eq('id', skillId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Skill deleted successfully",
+      });
+      
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting skill:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete skill",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleRateSkill = async (skillId: string, rating: 'high' | 'medium' | 'low') => {
     if (!profile?.user_id) return;
     
@@ -233,95 +350,18 @@ const Skills = () => {
         </div>
         {isManagerOrAbove && (
           <div className="flex gap-2">
-            <Dialog open={showAddCategory} onOpenChange={setShowAddCategory}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Category
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Skill Category</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="categoryName">Category Name</Label>
-                    <Input
-                      id="categoryName"
-                      value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
-                      placeholder="e.g., Frontend Development"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="categoryDescription">Description</Label>
-                    <Textarea
-                      id="categoryDescription"
-                      value={newCategoryDescription}
-                      onChange={(e) => setNewCategoryDescription(e.target.value)}
-                      placeholder="Category description..."
-                    />
-                  </div>
-                  <Button onClick={handleAddCategory} className="w-full">
-                    Add Category
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              variant="outline"
+              onClick={() => setShowManageCategories(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Manage Categories
+            </Button>
             
-            <Dialog open={showAddSkill} onOpenChange={setShowAddSkill}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Skill
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Skill</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="skillCategory">Category</Label>
-                    <select
-                      id="skillCategory"
-                      value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md"
-                    >
-                      <option value="">Select a category</option>
-                      {skillCategories.map(category => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <Label htmlFor="skillName">Skill Name</Label>
-                    <Input
-                      id="skillName"
-                      value={newSkillName}
-                      onChange={(e) => setNewSkillName(e.target.value)}
-                      placeholder="e.g., React"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="skillDescription">Description</Label>
-                    <Textarea
-                      id="skillDescription"
-                      value={newSkillDescription}
-                      onChange={(e) => setNewSkillDescription(e.target.value)}
-                      placeholder="Skill description..."
-                    />
-                  </div>
-                  <Button onClick={handleAddSkill} className="w-full">
-                    Add Skill
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => setShowManageSkills(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Manage Skills
+            </Button>
           </div>
         )}
       </div>
@@ -424,6 +464,238 @@ const Skills = () => {
           })
         )}
       </div>
+
+      {/* Manage Categories Dialog */}
+      <Dialog open={showManageCategories} onOpenChange={setShowManageCategories}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Manage Categories</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Existing Categories</h3>
+              <Button onClick={() => setShowAddCategory(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add New Category
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {skillCategories.map((category) => (
+                <div key={category.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
+                    {editingCategory?.id === category.id ? (
+                      <div className="space-y-2">
+                        <Input
+                          value={editingCategory.name}
+                          onChange={(e) => setEditingCategory({...editingCategory, name: e.target.value})}
+                          placeholder="Category name"
+                        />
+                        <Textarea
+                          value={editingCategory.description || ''}
+                          onChange={(e) => setEditingCategory({...editingCategory, description: e.target.value})}
+                          placeholder="Category description"
+                        />
+                      </div>
+                    ) : (
+                      <div>
+                        <h4 className="font-medium">{category.name}</h4>
+                        {category.description && (
+                          <p className="text-sm text-muted-foreground">{category.description}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    {editingCategory?.id === category.id ? (
+                      <>
+                        <Button size="sm" onClick={() => handleEditCategory(editingCategory)}>
+                          Save
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditingCategory(null)}>
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => setEditingCategory(category)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleDeleteCategory(category.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Skills Dialog */}
+      <Dialog open={showManageSkills} onOpenChange={setShowManageSkills}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Manage Skills</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Existing Skills</h3>
+              <Button onClick={() => setShowAddSkill(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add New Skill
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {skills.map((skill) => (
+                <div key={skill.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
+                    {editingSkill?.id === skill.id ? (
+                      <div className="space-y-2">
+                        <select
+                          value={editingSkill.category_id}
+                          onChange={(e) => setEditingSkill({...editingSkill, category_id: e.target.value})}
+                          className="w-full px-3 py-2 border rounded-md"
+                        >
+                          {skillCategories.map(category => (
+                            <option key={category.id} value={category.id}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                        <Input
+                          value={editingSkill.name}
+                          onChange={(e) => setEditingSkill({...editingSkill, name: e.target.value})}
+                          placeholder="Skill name"
+                        />
+                        <Textarea
+                          value={editingSkill.description || ''}
+                          onChange={(e) => setEditingSkill({...editingSkill, description: e.target.value})}
+                          placeholder="Skill description"
+                        />
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{skill.name}</h4>
+                          <Badge variant="outline">
+                            {skillCategories.find(c => c.id === skill.category_id)?.name}
+                          </Badge>
+                        </div>
+                        {skill.description && (
+                          <p className="text-sm text-muted-foreground">{skill.description}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 ml-4">
+                    {editingSkill?.id === skill.id ? (
+                      <>
+                        <Button size="sm" onClick={() => handleEditSkill(editingSkill)}>
+                          Save
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditingSkill(null)}>
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => setEditingSkill(skill)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleDeleteSkill(skill.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Category Dialog */}
+      <Dialog open={showAddCategory} onOpenChange={setShowAddCategory}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Skill Category</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="categoryName">Category Name</Label>
+              <Input
+                id="categoryName"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="e.g., Frontend Development"
+              />
+            </div>
+            <div>
+              <Label htmlFor="categoryDescription">Description</Label>
+              <Textarea
+                id="categoryDescription"
+                value={newCategoryDescription}
+                onChange={(e) => setNewCategoryDescription(e.target.value)}
+                placeholder="Category description..."
+              />
+            </div>
+            <Button onClick={handleAddCategory} className="w-full">
+              Add Category
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add Skill Dialog */}
+      <Dialog open={showAddSkill} onOpenChange={setShowAddSkill}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Skill</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="skillCategory">Category</Label>
+              <select
+                id="skillCategory"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md"
+              >
+                <option value="">Select a category</option>
+                {skillCategories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="skillName">Skill Name</Label>
+              <Input
+                id="skillName"
+                value={newSkillName}
+                onChange={(e) => setNewSkillName(e.target.value)}
+                placeholder="e.g., React"
+              />
+            </div>
+            <div>
+              <Label htmlFor="skillDescription">Description</Label>
+              <Textarea
+                id="skillDescription"
+                value={newSkillDescription}
+                onChange={(e) => setNewSkillDescription(e.target.value)}
+                placeholder="Skill description..."
+              />
+            </div>
+            <Button onClick={handleAddSkill} className="w-full">
+              Add Skill
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
