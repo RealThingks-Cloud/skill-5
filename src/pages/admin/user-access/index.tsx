@@ -15,7 +15,7 @@ import { PasswordResetDialog } from "./components/PasswordResetDialog";
 import { USER_ROLES, USER_STATUS, ROLE_LABELS, STATUS_LABELS } from "@/utils/constants";
 import type { UserProfile } from "./services/userService";
 interface UserAccessProps {
-  onBack: () => void;
+  onBack?: () => void;
 }
 export default function UserAccess({
   onBack
