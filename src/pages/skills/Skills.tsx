@@ -186,12 +186,30 @@ const Skills = () => {
 
   const handleDeleteCategory = async (categoryId: string) => {
     try {
+      // First check if there are skills in this category
+      const { data: skillsInCategory } = await supabase
+        .from('skills')
+        .select('id')
+        .eq('category_id', categoryId);
+      
+      if (skillsInCategory && skillsInCategory.length > 0) {
+        toast({
+          title: "Cannot Delete Category",
+          description: `This category has ${skillsInCategory.length} skill(s) associated with it. Please delete or move the skills first.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const { error } = await supabase
         .from('skill_categories')
         .delete()
         .eq('id', categoryId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
       
       toast({
         title: "Success",
@@ -203,7 +221,7 @@ const Skills = () => {
       console.error('Error deleting category:', error);
       toast({
         title: "Error",
-        description: "Failed to delete category",
+        description: error.message || "Failed to delete category",
         variant: "destructive",
       });
     }
@@ -243,12 +261,30 @@ const Skills = () => {
 
   const handleDeleteSkill = async (skillId: string) => {
     try {
+      // First check if there are user_skills associated with this skill
+      const { data: userSkillsForSkill } = await supabase
+        .from('user_skills')
+        .select('id')
+        .eq('skill_id', skillId);
+      
+      if (userSkillsForSkill && userSkillsForSkill.length > 0) {
+        toast({
+          title: "Cannot Delete Skill",
+          description: `This skill has ${userSkillsForSkill.length} user rating(s) associated with it. Please remove user ratings first.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const { error } = await supabase
         .from('skills')
         .delete()
         .eq('id', skillId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
       
       toast({
         title: "Success",
@@ -260,7 +296,7 @@ const Skills = () => {
       console.error('Error deleting skill:', error);
       toast({
         title: "Error",
-        description: "Failed to delete skill",
+        description: error.message || "Failed to delete skill",
         variant: "destructive",
       });
     }
