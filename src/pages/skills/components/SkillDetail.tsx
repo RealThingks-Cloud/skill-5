@@ -7,11 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RatingPill } from "@/components/common/RatingPill";
-import type { Skill, Subskill, UserSkill } from "@/types/database";
+import type { Skill, Subskill, EmployeeRating } from "@/types/database";
 interface SkillDetailProps {
   skill: Skill;
   subskills: Subskill[];
-  userSkills: UserSkill[];
+  userSkills: EmployeeRating[];
   pendingRatings: Map<string, { type: 'skill' | 'subskill', id: string, rating: 'high' | 'medium' | 'low' }>;
   isManagerOrAbove: boolean;
   onSkillRate: (skillId: string, rating: 'high' | 'medium' | 'low') => void;

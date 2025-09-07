@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import type { SkillCategory, Skill, Subskill, UserSkill } from "@/types/database";
+import type { SkillCategory, Skill, Subskill, UserSkill, EmployeeRating } from "@/types/database";
 
 export const useSkills = () => {
   const [skillCategories, setSkillCategories] = useState<SkillCategory[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [subskills, setSubskills] = useState<Subskill[]>([]);
-  const [userSkills, setUserSkills] = useState<UserSkill[]>([]);
+  const [userSkills, setUserSkills] = useState<EmployeeRating[]>([]);
   const [pendingRatings, setPendingRatings] = useState<Map<string, { type: 'skill' | 'subskill', id: string, rating: 'high' | 'medium' | 'low' }>>(new Map());
   const [loading, setLoading] = useState(true);
   
@@ -39,11 +39,11 @@ export const useSkills = () => {
         .select('*')
         .order('name');
 
-      // Fetch user skills for current user
+      // Fetch employee ratings for current user
       let userSkillsData: any[] = [];
       if (profile.user_id) {
         const { data } = await supabase
-          .from('user_skills')
+          .from('employee_ratings')
           .select(`
             *,
             skill:skills(*),
@@ -57,7 +57,7 @@ export const useSkills = () => {
       setSkillCategories(categoriesData || []);
       setSkills(skillsData || []);
       setSubskills(subskillsData as unknown as Subskill[] || []);
-      setUserSkills(userSkillsData as UserSkill[]);
+      setUserSkills(userSkillsData as EmployeeRating[]);
     } catch (error) {
       console.error('Error fetching skills data:', error);
       toast({
@@ -100,64 +100,40 @@ export const useSkills = () => {
     try {
       const ratingsToSave = Array.from(pendingRatings.values());
       
-      for (const rating of ratingsToSave) {
+      // Prepare data for UPSERT
+      const ratingsData = ratingsToSave.map(rating => {
         if (rating.type === 'skill') {
-          const existingRating = userSkills.find(us => us.skill_id === rating.id && !us.subskill_id);
-          
-          if (existingRating) {
-            const { error } = await supabase
-              .from('user_skills')
-              .update({ 
-                rating: rating.rating,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', existingRating.id);
-            
-            if (error) throw error;
-          } else {
-            const { error } = await supabase
-              .from('user_skills')
-              .insert({
-                user_id: profile.user_id,
-                skill_id: rating.id,
-                rating: rating.rating,
-                status: 'draft'
-              });
-            
-            if (error) throw error;
-          }
+          return {
+            user_id: profile.user_id,
+            skill_id: rating.id,
+            subskill_id: null,
+            rating: rating.rating,
+            status: 'draft' as const
+          };
         } else {
           // Handle subskill rating
           const subskill = subskills.find(s => s.id === rating.id);
-          if (!subskill) continue;
+          if (!subskill) return null;
 
-          const existingRating = userSkills.find(us => us.subskill_id === rating.id);
-          
-          if (existingRating) {
-            const { error } = await supabase
-              .from('user_skills')
-              .update({ 
-                rating: rating.rating,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', existingRating.id);
-            
-            if (error) throw error;
-          } else {
-            const { error } = await supabase
-              .from('user_skills')
-              .insert({
-                user_id: profile.user_id,
-                skill_id: subskill.skill_id,
-                subskill_id: rating.id,
-                rating: rating.rating,
-                status: 'draft'
-              });
-            
-            if (error) throw error;
-          }
+          return {
+            user_id: profile.user_id,
+            skill_id: subskill.skill_id,
+            subskill_id: rating.id,
+            rating: rating.rating,
+            status: 'draft' as const
+          };
         }
-      }
+      }).filter(Boolean);
+
+      // Use UPSERT to handle both insert and update
+      const { error } = await supabase
+        .from('employee_ratings')
+        .upsert(ratingsData, {
+          onConflict: 'user_id,skill_id,subskill_id',
+          ignoreDuplicates: false
+        });
+
+      if (error) throw error;
 
       toast({
         title: "✅ Ratings saved successfully",

@@ -56,6 +56,25 @@ export interface UserSkill {
   approver?: Profile;
 }
 
+export interface EmployeeRating {
+  id: string;
+  user_id: string;
+  skill_id: string;
+  subskill_id?: string;
+  rating: 'high' | 'medium' | 'low';
+  status: 'draft' | 'submitted' | 'approved' | 'rejected';
+  self_comment?: string;
+  approver_comment?: string;
+  approved_by?: string;
+  created_at: string;
+  updated_at: string;
+  submitted_at?: string;
+  approved_at?: string;
+  skill?: Skill;
+  subskill?: Subskill;
+  approver?: Profile;
+}
+
 export interface Project {
   id: string;
   name: string;

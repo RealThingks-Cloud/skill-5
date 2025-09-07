@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      employee_ratings: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          approver_comment: string | null
+          created_at: string
+          id: string
+          rating: string
+          self_comment: string | null
+          skill_id: string
+          status: string
+          submitted_at: string | null
+          subskill_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approver_comment?: string | null
+          created_at?: string
+          id?: string
+          rating: string
+          self_comment?: string | null
+          skill_id: string
+          status?: string
+          submitted_at?: string | null
+          subskill_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          approver_comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: string
+          self_comment?: string | null
+          skill_id?: string
+          status?: string
+          submitted_at?: string | null
+          subskill_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_ratings_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_ratings_subskill_id_fkey"
+            columns: ["subskill_id"]
+            isOneToOne: false
+            referencedRelation: "subskills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string

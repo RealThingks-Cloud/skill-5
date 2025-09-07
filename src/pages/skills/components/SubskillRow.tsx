@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import { RatingPill } from "@/components/common/RatingPill";
-import type { Subskill, UserSkill } from "@/types/database";
+import type { Subskill, EmployeeRating } from "@/types/database";
 
 interface SubskillRowProps {
   subskill: Subskill;
-  userSkills: UserSkill[];
+  userSkills: EmployeeRating[];
   pendingRatings: Map<string, { type: 'skill' | 'subskill', id: string, rating: 'high' | 'medium' | 'low' }>;
   isManagerOrAbove: boolean;
   onSubskillRate: (subskillId: string, rating: 'high' | 'medium' | 'low') => void;
