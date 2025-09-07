@@ -20,6 +20,7 @@ export const useSkills = () => {
     
     try {
       setLoading(true);
+      console.log('🔍 Fetching data for user:', profile.user_id);
 
       // Fetch skill categories
       const { data: categoriesData } = await supabase
@@ -39,27 +40,49 @@ export const useSkills = () => {
         .select('*')
         .order('name');
 
-      // Fetch employee ratings for current user
+      // Fetch employee ratings for current user with manual joins
       let userSkillsData: any[] = [];
       if (profile.user_id) {
-        const { data } = await supabase
+        console.log('📊 Fetching employee ratings...');
+        
+        // First get the ratings
+        const { data: ratingsData, error: ratingsError } = await supabase
           .from('employee_ratings')
-          .select(`
-            *,
-            skill:skills(*),
-            subskill:subskills(*),
-            approver:profiles(*)
-          `)
+          .select('*')
           .eq('user_id', profile.user_id);
-        userSkillsData = data || [];
+        
+        console.log('📊 Raw ratings result:', { data: ratingsData, error: ratingsError, count: ratingsData?.length });
+
+        if (ratingsData && ratingsData.length > 0) {
+          // Get related skills and profiles
+          const skillIds = [...new Set(ratingsData.map(r => r.skill_id))];
+          const subskillIds = [...new Set(ratingsData.map(r => r.subskill_id).filter(Boolean))];
+          const approverIds = [...new Set(ratingsData.map(r => r.approved_by).filter(Boolean))];
+
+          // Fetch related data
+          const [skillsResult, subskillsResult, profilesResult] = await Promise.all([
+            supabase.from('skills').select('*').in('id', skillIds),
+            subskillIds.length > 0 ? supabase.from('subskills').select('*').in('id', subskillIds) : Promise.resolve({ data: [] }),
+            approverIds.length > 0 ? supabase.from('profiles').select('*').in('user_id', approverIds) : Promise.resolve({ data: [] })
+          ]);
+
+          // Manually join the data
+          userSkillsData = ratingsData.map(rating => ({
+            ...rating,
+            skill: skillsResult.data?.find(s => s.id === rating.skill_id),
+            subskill: rating.subskill_id ? subskillsResult.data?.find(s => s.id === rating.subskill_id) : null,
+            approver: rating.approved_by ? profilesResult.data?.find(p => p.user_id === rating.approved_by) : null
+          }));
+        }
       }
 
       setSkillCategories(categoriesData || []);
       setSkills(skillsData || []);
       setSubskills(subskillsData as unknown as Subskill[] || []);
       setUserSkills(userSkillsData as EmployeeRating[]);
+      console.log('📋 State updated - userSkills count:', userSkillsData.length);
     } catch (error) {
-      console.error('Error fetching skills data:', error);
+      console.error('❌ Error fetching skills data:', error);
       toast({
         title: "Error",
         description: "Failed to load skills data",
@@ -99,6 +122,8 @@ export const useSkills = () => {
 
     try {
       const ratingsToSave = Array.from(pendingRatings.values());
+      console.log('🔄 Saving ratings:', ratingsToSave);
+      console.log('👤 User ID:', profile.user_id);
       
       // Prepare data for UPSERT
       const ratingsData = ratingsToSave.map(rating => {
@@ -125,13 +150,18 @@ export const useSkills = () => {
         }
       }).filter(Boolean);
 
+      console.log('💾 Data to save:', ratingsData);
+
       // Use UPSERT to handle both insert and update
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('employee_ratings')
         .upsert(ratingsData, {
           onConflict: 'user_id,skill_id,subskill_id',
           ignoreDuplicates: false
-        });
+        })
+        .select();
+
+      console.log('✅ Upsert result:', { data, error });
 
       if (error) throw error;
 
@@ -141,9 +171,9 @@ export const useSkills = () => {
       });
 
       setPendingRatings(new Map());
-      fetchData();
+      await fetchData();
     } catch (error) {
-      console.error('Error saving ratings:', error);
+      console.error('❌ Error saving ratings:', error);
       toast({
         title: "Error",
         description: "Failed to save ratings",
