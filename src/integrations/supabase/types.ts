@@ -387,7 +387,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      test_employee_rating_insert: {
+        Args: {
+          p_rating: string
+          p_skill_id: string
+          p_subskill_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
