@@ -1,7 +1,6 @@
 import UserAccess from "./user-access";
 
 const Admin = () => {
-  return <UserAccess />;
+  return <UserAccess onBack={() => {}} />;
 };
-
 export default Admin;

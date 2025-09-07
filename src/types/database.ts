@@ -28,10 +28,20 @@ export interface Skill {
   category?: SkillCategory;
 }
 
+export interface Subskill {
+  id: string;
+  skill_id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface UserSkill {
   id: string;
   user_id: string;
   skill_id: string;
+  subskill_id?: string;
   rating: 'high' | 'medium' | 'low';
   status: 'draft' | 'submitted' | 'approved' | 'rejected';
   self_comment?: string;
@@ -42,6 +52,7 @@ export interface UserSkill {
   submitted_at?: string;
   approved_at?: string;
   skill?: Skill;
+  subskill?: Subskill;
   approver?: Profile;
 }
 

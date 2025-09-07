@@ -54,6 +54,7 @@ export type Database = {
           last_login: string | null
           role: string
           status: string | null
+          tech_lead_id: string | null
           updated_at: string
           user_id: string
         }
@@ -66,6 +67,7 @@ export type Database = {
           last_login?: string | null
           role?: string
           status?: string | null
+          tech_lead_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -78,10 +80,19 @@ export type Database = {
           last_login?: string | null
           role?: string
           status?: string | null
+          tech_lead_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_tech_lead_id_fkey"
+            columns: ["tech_lead_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       project_assignments: {
         Row: {
@@ -210,6 +221,41 @@ export type Database = {
           },
         ]
       }
+      subskills: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          skill_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          skill_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          skill_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subskills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_skills: {
         Row: {
           approved_at: string | null
@@ -222,6 +268,7 @@ export type Database = {
           skill_id: string
           status: string
           submitted_at: string | null
+          subskill_id: string | null
           updated_at: string
           user_id: string
         }
@@ -236,6 +283,7 @@ export type Database = {
           skill_id: string
           status?: string
           submitted_at?: string | null
+          subskill_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -250,6 +298,7 @@ export type Database = {
           skill_id?: string
           status?: string
           submitted_at?: string | null
+          subskill_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -259,6 +308,13 @@ export type Database = {
             columns: ["skill_id"]
             isOneToOne: false
             referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_skills_subskill_id_fkey"
+            columns: ["subskill_id"]
+            isOneToOne: false
+            referencedRelation: "subskills"
             referencedColumns: ["id"]
           },
         ]

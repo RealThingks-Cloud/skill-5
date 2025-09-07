@@ -12,6 +12,7 @@ export interface UpdateUserData {
   email?: string;
   full_name?: string;
   role?: UserRole;
+  tech_lead_id?: string;
 }
 
 export interface UserProfile {
@@ -24,13 +25,26 @@ export interface UserProfile {
   created_at: string;
   updated_at: string;
   last_login?: string;
+  tech_lead_id?: string;
+  tech_lead?: {
+    user_id: string;
+    full_name: string;
+    email: string;
+  };
 }
 
 class UserService {
   async getUsers(): Promise<UserProfile[]> {
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select(`
+        *,
+        tech_lead:tech_lead_id (
+          user_id,
+          full_name,
+          email
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -112,6 +126,18 @@ class UserService {
     if (error) {
       console.error('Error toggling user status:', error);
       throw new Error(error.message || 'Failed to update user status');
+    }
+  }
+
+  async updateTechLead(userId: string, techLeadId: string | null): Promise<void> {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ tech_lead_id: techLeadId })
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error updating tech lead:', error);
+      throw new Error('Failed to update tech lead assignment');
     }
   }
 

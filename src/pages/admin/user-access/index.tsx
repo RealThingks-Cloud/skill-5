@@ -14,8 +14,9 @@ import { DeleteUserDialog } from "./components/DeleteUserDialog";
 import { PasswordResetDialog } from "./components/PasswordResetDialog";
 import { USER_ROLES, USER_STATUS, ROLE_LABELS, STATUS_LABELS } from "@/utils/constants";
 import type { UserProfile } from "./services/userService";
+import { TechLeadSelect } from "./components/TechLeadSelect";
 interface UserAccessProps {
-  onBack?: () => void;
+  onBack: () => void;
 }
 export default function UserAccess({
   onBack
@@ -30,8 +31,8 @@ export default function UserAccess({
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
-    admins: 0,
-    pending: 0
+    employees: 0,
+    techLeads: 0
   });
   const {
     toast
@@ -46,12 +47,13 @@ export default function UserAccess({
       // Calculate stats
       const total = data.length;
       const active = data.filter(u => u.status === USER_STATUS.ACTIVE).length;
-      const admins = data.filter(u => u.role === USER_ROLES.ADMIN).length;
+      const employees = data.filter(u => u.role === USER_ROLES.EMPLOYEE).length;
+      const techLeads = data.filter(u => u.role === USER_ROLES.TECH_LEAD).length;
       setStats({
         total,
         active,
-        admins,
-        pending: 0
+        employees,
+        techLeads
       });
     } catch (error) {
       toast({
@@ -122,9 +124,7 @@ export default function UserAccess({
           
           <div>
             <h1 className="text-3xl font-bold tracking-tight">User & Access Management</h1>
-            <p className="text-muted-foreground">
-              Manage user accounts, roles, and permissions
-            </p>
+            
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -167,25 +167,27 @@ export default function UserAccess({
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Admins</CardTitle>
-            <Shield className="h-4 w-4 text-destructive" />
+            <CardTitle className="text-sm font-medium">Employees</CardTitle>
+            <Users className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.admins}</div>
+            <div className="text-2xl font-bold">{stats.employees}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.total > 0 ? Math.round(stats.admins / stats.total * 100) : 0}% of users
+              {stats.total > 0 ? Math.round(stats.employees / stats.total * 100) : 0}% of users
             </p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Status</CardTitle>
-            <Settings className="h-4 w-4 text-warning" />
+            <CardTitle className="text-sm font-medium">Tech Leads</CardTitle>
+            <Shield className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Active</div>
-            <p className="text-xs text-muted-foreground">All systems operational</p>
+            <div className="text-2xl font-bold">{stats.techLeads}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.total > 0 ? Math.round(stats.techLeads / stats.total * 100) : 0}% of users
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -196,10 +198,7 @@ export default function UserAccess({
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search users by name or email..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8" />
         </div>
-        <Button variant="outline">
-          <Filter className="mr-2 h-4 w-4" />
-          Filter
-        </Button>
+        
       </div>
 
       {/* Users Table */}
@@ -217,6 +216,7 @@ export default function UserAccess({
                 <TableHead>Display Name</TableHead>
                 <TableHead className="hidden md:table-cell">Email</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Tech Lead</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="hidden lg:table-cell">Last Login</TableHead>
                 <TableHead className="hidden xl:table-cell">Created At</TableHead>
@@ -225,12 +225,12 @@ export default function UserAccess({
             </TableHeader>
             <TableBody>
               {loading ? <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
                     Loading users...
                   </TableCell>
                 </TableRow> : filteredUsers.length === 0 ? <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     No users found
                   </TableCell>
                 </TableRow> : filteredUsers.map(user => <TableRow key={user.id}>
@@ -249,6 +249,9 @@ export default function UserAccess({
                       </Badge>
                     </TableCell>
                     <TableCell>
+                      <TechLeadSelect user={user} onUpdate={loadUsers} />
+                    </TableCell>
+                    <TableCell>
                       <Badge className={getStatusColor(user.status || USER_STATUS.ACTIVE)}>
                         {STATUS_LABELS[(user.status || USER_STATUS.ACTIVE) as keyof typeof STATUS_LABELS]}
                       </Badge>
@@ -263,12 +266,7 @@ export default function UserAccess({
                       <div className="flex items-center justify-center gap-1">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 w-8 p-0 hover:bg-primary/10"
-                              onClick={() => handleEditUser(user)}
-                            >
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-primary/10" onClick={() => handleEditUser(user)}>
                               <Edit className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
@@ -279,12 +277,7 @@ export default function UserAccess({
                         
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 w-8 p-0 hover:bg-warning/10"
-                              onClick={() => handlePasswordReset(user)}
-                            >
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-warning/10" onClick={() => handlePasswordReset(user)}>
                               <Key className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
@@ -295,17 +288,8 @@ export default function UserAccess({
                         
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 w-8 p-0 hover:bg-success/10"
-                              onClick={() => handleToggleStatus(user)}
-                            >
-                              {user.status === USER_STATUS.ACTIVE ? (
-                                <UserX className="h-4 w-4" />
-                              ) : (
-                                <UserCheck className="h-4 w-4" />
-                              )}
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-success/10" onClick={() => handleToggleStatus(user)}>
+                              {user.status === USER_STATUS.ACTIVE ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
@@ -315,12 +299,7 @@ export default function UserAccess({
                         
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 w-8 p-0 hover:bg-destructive/10 text-destructive"
-                              onClick={() => handleDeleteUser(user)}
-                            >
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive/10 text-destructive" onClick={() => handleDeleteUser(user)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
