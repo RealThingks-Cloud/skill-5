@@ -17,8 +17,8 @@ const Approvals = () => {
     recentActions, 
     loading, 
     handleApproveRating, 
-    handleUpdateRating,
-    handleRejectRating
+    handleRejectRating,
+    refetch
   } = useApprovals();
 
   const [selectedEmployee, setSelectedEmployee] = useState<GroupedApproval | null>(null);
@@ -35,6 +35,48 @@ const Approvals = () => {
   const handleEmployeeClick = (employee: GroupedApproval) => {
     setSelectedEmployee(employee);
     setDetailOpen(true);
+  };
+
+  const handleEmployeeApprove = async (approvalId: string, comment?: string) => {
+    await handleApproveRating(approvalId, comment);
+    // Remove the approved rating from the current employee's list
+    if (selectedEmployee) {
+      const updatedRatings = selectedEmployee.ratings.filter(rating => rating.id !== approvalId);
+      const updatedEmployee = {
+        ...selectedEmployee,
+        ratings: updatedRatings,
+        pendingCount: updatedRatings.length
+      };
+      setSelectedEmployee(updatedEmployee);
+      
+      // Close dialog if no more ratings
+      if (updatedRatings.length === 0) {
+        setDetailOpen(false);
+        setSelectedEmployee(null);
+      }
+    }
+    refetch();
+  };
+
+  const handleEmployeeReject = async (approvalId: string, comment: string) => {
+    await handleRejectRating(approvalId, comment);
+    // Remove the rejected rating from the current employee's list
+    if (selectedEmployee) {
+      const updatedRatings = selectedEmployee.ratings.filter(rating => rating.id !== approvalId);
+      const updatedEmployee = {
+        ...selectedEmployee,
+        ratings: updatedRatings,
+        pendingCount: updatedRatings.length
+      };
+      setSelectedEmployee(updatedEmployee);
+      
+      // Close dialog if no more ratings
+      if (updatedRatings.length === 0) {
+        setDetailOpen(false);
+        setSelectedEmployee(null);
+      }
+    }
+    refetch();
   };
 
   const getPriorityColor = (priority: string) => {
@@ -209,9 +251,8 @@ const Approvals = () => {
           employee={selectedEmployee}
           open={detailOpen}
           onOpenChange={setDetailOpen}
-          onApprove={handleApproveRating}
-          onUpdateRating={handleUpdateRating}
-          onReject={handleRejectRating}
+          onApprove={handleEmployeeApprove}
+          onReject={handleEmployeeReject}
         />
     </div>
   );

@@ -3,8 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle, XCircle, AlertTriangle, Edit } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import type { GroupedApproval } from "../hooks/useApprovals";
 
@@ -12,8 +11,7 @@ interface EmployeeApprovalDetailProps {
   employee: GroupedApproval | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onApprove: (approvalId: string) => void;
-  onUpdateRating: (approvalId: string, newRating: 'high' | 'medium' | 'low', comment?: string) => void;
+  onApprove: (approvalId: string, comment?: string) => void;
   onReject: (approvalId: string, comment: string) => void;
 }
 
@@ -22,13 +20,11 @@ export const EmployeeApprovalDetail = ({
   open,
   onOpenChange,
   onApprove,
-  onUpdateRating,
   onReject
 }: EmployeeApprovalDetailProps) => {
-  const [selectedRating, setSelectedRating] = useState<string | null>(null);
-  const [updateComment, setUpdateComment] = useState("");
-  const [newRating, setNewRating] = useState<'high' | 'medium' | 'low'>('medium');
+  const [approveComment, setApproveComment] = useState("");
   const [rejectComment, setRejectComment] = useState("");
+  const [showApproveDialog, setShowApproveDialog] = useState<string | null>(null);
   const [showRejectDialog, setShowRejectDialog] = useState<string | null>(null);
 
   if (!employee) return null;
@@ -53,11 +49,18 @@ export const EmployeeApprovalDetail = ({
     onOpenChange(false);
   };
 
-  const handleUpdateRating = (ratingId: string) => {
-    onUpdateRating(ratingId, newRating, updateComment);
-    setUpdateComment("");
-    setSelectedRating(null);
-    setNewRating('medium');
+  const handleApprove = (ratingId: string) => {
+    onApprove(ratingId, approveComment);
+    setApproveComment("");
+    setShowApproveDialog(null);
+  };
+
+  const handleReject = (ratingId: string) => {
+    if (rejectComment.trim()) {
+      onReject(ratingId, rejectComment);
+      setRejectComment("");
+      setShowRejectDialog(null);
+    }
   };
 
   return (
@@ -101,23 +104,11 @@ export const EmployeeApprovalDetail = ({
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    onClick={() => onApprove(rating.id)}
+                    onClick={() => setShowApproveDialog(rating.id)}
                     className="flex-1"
                   >
                     <CheckCircle className="mr-1 h-3 w-3" />
                     Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setSelectedRating(rating.id);
-                      setNewRating(rating.rating);
-                    }}
-                    className="flex-1"
-                  >
-                    <Edit className="mr-1 h-3 w-3" />
-                    Update Rating
                   </Button>
                   <Button
                     size="sm"
@@ -130,50 +121,40 @@ export const EmployeeApprovalDetail = ({
                   </Button>
                 </div>
 
-                {/* Update Rating Section */}
-                {selectedRating === rating.id && (
-                  <div className="mt-3 space-y-3">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Update Rating:</label>
-                      <Select value={newRating} onValueChange={(value) => setNewRating(value as 'high' | 'medium' | 'low')}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="high">HIGH</SelectItem>
-                          <SelectItem value="medium">MEDIUM</SelectItem>
-                          <SelectItem value="low">LOW</SelectItem>
-                        </SelectContent>
-                      </Select>
+                {/* Approve Comment Section */}
+                {showApproveDialog === rating.id && (
+                  <div className="mt-3 space-y-3 p-3 bg-green-50 border border-green-200 rounded">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <Label className="text-sm font-medium text-green-800">Approve Rating - Optional Comment</Label>
                     </div>
                     <Textarea
-                      placeholder="Add a comment explaining the rating update..."
-                      value={updateComment}
-                      onChange={(e) => setUpdateComment(e.target.value)}
+                      placeholder="Add an optional comment for this approval..."
+                      value={approveComment}
+                      onChange={(e) => setApproveComment(e.target.value)}
                       className="min-h-[80px]"
                     />
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        onClick={() => handleUpdateRating(rating.id)}
-                        className="bg-blue-600 hover:bg-blue-700"
+                        onClick={() => handleApprove(rating.id)}
+                        className="bg-green-600 hover:bg-green-700"
                       >
-                        Update & Approve
+                        Confirm Approval
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          setSelectedRating(null);
-                          setUpdateComment("");
-                          setNewRating('medium');
+                          setShowApproveDialog(null);
+                          setApproveComment("");
                         }}
                       >
                         Cancel
                       </Button>
                     </div>
                   </div>
-                  )}
+                )}
 
                 {/* Reject Dialog */}
                 {showRejectDialog === rating.id && (
@@ -193,13 +174,7 @@ export const EmployeeApprovalDetail = ({
                       <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => {
-                          if (rejectComment.trim()) {
-                            onReject(rating.id, rejectComment);
-                            setRejectComment("");
-                            setShowRejectDialog(null);
-                          }
-                        }}
+                        onClick={() => handleReject(rating.id)}
                         disabled={!rejectComment.trim()}
                       >
                         Confirm Rejection

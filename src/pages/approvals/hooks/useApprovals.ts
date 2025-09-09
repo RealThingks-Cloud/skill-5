@@ -175,7 +175,7 @@ export const useApprovals = () => {
     }
   };
 
-  const handleApproveRating = async (approvalId: string) => {
+  const handleApproveRating = async (approvalId: string, comment?: string) => {
     try {
       if (!user?.id) {
         toast.error('You must be logged in to approve ratings');
@@ -187,7 +187,8 @@ export const useApprovals = () => {
         .update({
           status: 'approved',
           approved_by: user.id,
-          approved_at: new Date().toISOString()
+          approved_at: new Date().toISOString(),
+          approver_comment: comment || null
         })
         .eq('id', approvalId);
 
@@ -203,6 +204,7 @@ export const useApprovals = () => {
           rating_id: approvalId,
           approver_id: user.id,
           action: 'approved',
+          approver_comment: comment || '',
           created_at: new Date().toISOString()
         });
 
@@ -212,54 +214,6 @@ export const useApprovals = () => {
     } catch (error) {
       console.error('Error approving rating:', error);
       toast.error('Failed to approve rating');
-    }
-  };
-
-  const handleUpdateRating = async (
-    approvalId: string, 
-    newRating: 'high' | 'medium' | 'low', 
-    comment?: string
-  ) => {
-    try {
-      if (!user?.id) {
-        toast.error('You must be logged in to update ratings');
-        return;
-      }
-
-      const { error } = await supabase
-        .from('employee_ratings')
-        .update({
-          rating: newRating,
-          status: 'approved',
-          approved_by: user.id,
-          approved_at: new Date().toISOString(),
-          approver_comment: comment
-        })
-        .eq('id', approvalId);
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      // Log the approval action
-      await supabase
-        .from('approval_logs')
-        .insert({
-          rating_id: approvalId,
-          approver_id: user.id,
-          action: 'approved',
-          new_rating: newRating,
-          approver_comment: comment || '',
-          created_at: new Date().toISOString()
-        });
-
-      toast.success('Rating updated and approved');
-      fetchPendingApprovals();
-      fetchRecentActions();
-    } catch (error) {
-      console.error('Error updating rating:', error);
-      toast.error('Failed to update rating');
     }
   };
 
@@ -325,7 +279,6 @@ export const useApprovals = () => {
     recentActions,
     loading,
     handleApproveRating,
-    handleUpdateRating,
     handleRejectRating,
     refetch: () => {
       fetchPendingApprovals();
