@@ -49,7 +49,8 @@ export const useApprovals = () => {
     
     setLoading(true);
     try {
-      // Fetch employee ratings that need approval for tech leads
+      // Fetch ALL employee ratings that need approval for ANY tech lead
+      // This allows any tech lead to approve any employee's ratings
       const { data: ratings, error } = await supabase
         .from('employee_ratings')
         .select(`
@@ -73,19 +74,16 @@ export const useApprovals = () => {
 
       if (error) throw error;
 
-      // Get profiles for tech lead filtering
+      // Get ALL profiles to map user info
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, full_name, email, tech_lead_id')
-        .eq('tech_lead_id', user.id);
+        .eq('role', 'employee');
 
       if (profilesError) throw profilesError;
 
-      // Filter ratings for employees under this tech lead
-      const userIds = profiles?.map(p => p.user_id) || [];
-      const filteredRatings = ratings?.filter(rating => 
-        userIds.includes(rating.user_id)
-      ) || [];
+      // Create approvals for ALL submitted ratings (not filtered by tech lead assignment)
+      const filteredRatings = ratings || [];
 
       const approvals: ApprovalRequest[] = [];
 

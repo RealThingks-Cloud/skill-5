@@ -192,21 +192,38 @@ export const useSkills = () => {
         if (notificationError) {
           console.error('❌ Error creating tech lead notifications:', notificationError);
         }
-      } else if (profile.tech_lead_id) {
-        // Regular employee - notify their assigned tech lead
-        console.log('📨 Sending notification to tech lead:', profile.tech_lead_id);
+      } else {
+        // For ALL employees (including those without assigned tech leads)
+        // Send notifications to ALL active tech leads
+        console.log('📧 Sending notifications to all active tech leads for employee rating submission');
         
-        const { error: notificationError } = await supabase
-          .from('notifications')
-          .insert({
-            user_id: profile.tech_lead_id,
+        const { data: allTechLeads, error: techLeadsError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .eq('role', 'tech_lead')
+          .eq('status', 'active');
+
+        if (techLeadsError) {
+          console.error('❌ Error fetching tech leads:', techLeadsError);
+        } else if (allTechLeads && allTechLeads.length > 0) {
+          console.log(`📧 Sending notifications to ${allTechLeads.length} tech leads:`, allTechLeads.map(tl => tl.full_name));
+          
+          const notifications = allTechLeads.map(techLead => ({
+            user_id: techLead.user_id,
             title: 'New Skill Ratings Submitted',
             message: `${profile.full_name} has submitted ${ratingsWithComments.length} skill rating${ratingsWithComments.length > 1 ? 's' : ''} for your review.`,
-            type: 'info'
-          });
+            type: 'info' as const
+          }));
 
-        if (notificationError) {
-          console.error('❌ Error creating notification:', notificationError);
+          const { error: notificationError } = await supabase
+            .from('notifications')
+            .insert(notifications);
+
+          if (notificationError) {
+            console.error('❌ Error creating notifications:', notificationError);
+          } else {
+            console.log('✅ Notifications sent to all tech leads successfully');
+          }
         }
       }
 
