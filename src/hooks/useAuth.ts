@@ -13,6 +13,7 @@ interface UserProfile {
   created_at: string;
   updated_at: string;
   last_login?: string;
+  tech_lead_id?: string;
 }
 
 export interface UseAuthReturn {

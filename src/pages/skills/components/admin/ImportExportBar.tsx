@@ -4,10 +4,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Upload, Download, Plus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Upload, Download, Plus, AlertCircle, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AddCategoryModal } from "./AddCategoryModal";
+import { ImportExportService } from "../../services/importExport.service";
 import type { SkillCategory, Skill, Subskill } from "@/types/database";
 
 interface ImportExportBarProps {
@@ -15,6 +15,11 @@ interface ImportExportBarProps {
   skills: Skill[];
   subskills: Subskill[];
   onRefresh: () => void;
+}
+
+interface ImportResult {
+  success: number;
+  errors: number;
 }
 
 export const ImportExportBar = ({
@@ -27,59 +32,34 @@ export const ImportExportBar = ({
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [importData, setImportData] = useState<any[]>([]);
   const [importFile, setImportFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const { toast } = useToast();
 
-  const exportToCSV = () => {
-    const csvData: any[] = [];
-    
-    categories.forEach(category => {
-      const categorySkills = skills.filter(s => s.category_id === category.id);
+  const exportToCSV = async () => {
+    try {
+      const csvString = await ImportExportService.exportToCSV(categories, skills, subskills);
       
-      if (categorySkills.length === 0) {
-        csvData.push({
-          "Category": category.name,
-          "Skill": "",
-          "Subskill": "",
-          "Description": category.description || ""
-        });
-      }
-      
-      categorySkills.forEach(skill => {
-        const skillSubskills = subskills.filter(s => s.skill_id === skill.id);
-        
-        if (skillSubskills.length === 0) {
-          csvData.push({
-            "Category": category.name,
-            "Skill": skill.name,
-            "Subskill": "",
-            "Description": skill.description || ""
-          });
-        } else {
-          skillSubskills.forEach(subskill => {
-            csvData.push({
-              "Category": category.name,
-              "Skill": skill.name,
-              "Subskill": subskill.name,
-              "Description": subskill.description || ""
-            });
-          });
-        }
+      const blob = new Blob([csvString], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'skills_hierarchy_export.csv';
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export Successful",
+        description: "Skills hierarchy exported to CSV",
       });
-    });
-    
-    const headers = ["Category", "Skill", "Subskill", "Description"];
-    const csvString = [
-      headers.join(','),
-      ...csvData.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
-    ].join('\n');
-    
-    const blob = new Blob([csvString], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'skills_hierarchy_export.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export skills hierarchy",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,75 +98,49 @@ export const ImportExportBar = ({
   const handleImport = async () => {
     if (!importData.length) return;
     
+    console.log('🚀 Starting import process with', importData.length, 'rows');
+    setImporting(true);
+    setImportResult(null);
+    
     try {
-      for (const row of importData) {
-        // Create category if it doesn't exist
-        let categoryId = categories.find(c => c.name === row["Category"])?.id;
-        
-        if (!categoryId && row["Category"]) {
-          const { data: newCategory } = await supabase
-            .from('skill_categories')
-            .insert({ 
-              name: row["Category"], 
-              description: row["Skill"] ? "" : row["Description"] || '',
-              color: '#3B82F6'
-            })
-            .select()
-            .single();
-          categoryId = newCategory?.id;
-        }
-        
-        // Create skill if it doesn't exist
-        let skillId: string | undefined;
-        if (row["Skill"] && categoryId) {
-          const existingSkill = skills.find(s => s.name === row["Skill"] && s.category_id === categoryId);
-          if (!existingSkill) {
-            const { data: newSkill } = await supabase
-              .from('skills')
-              .insert({
-                name: row["Skill"],
-                description: row["Subskill"] ? "" : row["Description"] || '',
-                category_id: categoryId
-              })
-              .select()
-              .single();
-            skillId = newSkill?.id;
-          } else {
-            skillId = existingSkill.id;
-          }
-        }
-        
-        // TODO: Create subskill when table is created
-        if (row["Subskill"] && skillId) {
-          console.log('Would create subskill:', { name: row["Subskill"], description: row["Description"], skill_id: skillId });
-          // const existingSubskill = subskills.find(s => s.name === row["Subskill"] && s.skill_id === skillId);
-          // if (!existingSubskill) {
-          //   await supabase
-          //     .from('subskills')
-          //     .insert({
-          //       name: row["Subskill"],
-          //       description: row["Description"] || '',
-          //       skill_id: skillId
-          //     });
-          // }
-        }
+      const result = await ImportExportService.importFromCSV(
+        importData,
+        categories,
+        skills,
+        subskills
+      );
+      
+      console.log('✅ Import completed:', result);
+      setImportResult(result);
+      
+      if (result.errors === 0) {
+        toast({
+          title: "Import Successful",
+          description: `Successfully imported ${result.success} items`,
+        });
+      } else {
+        toast({
+          title: "Import Completed with Issues",
+          description: `${result.success} items imported, ${result.errors} errors occurred`,
+          variant: "destructive",
+        });
       }
       
-      toast({
-        title: "Success",
-        description: `Imported ${importData.length} items successfully`,
-      });
-      
-      setShowImportDialog(false);
-      setImportData([]);
-      setImportFile(null);
+      // Don't close dialog immediately, let user see results
+      // setShowImportDialog(false);
+      // setImportData([]);
+      // setImportFile(null);
       onRefresh();
     } catch (error) {
+      console.error('❌ Import error:', error);
       toast({
-        title: "Error",
-        description: "Failed to import data",
+        title: "Import Failed",
+        description: `Failed to import data: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
+      setImportResult({ success: 0, errors: importData.length });
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -249,8 +203,59 @@ export const ImportExportBar = ({
                     )}
                   </div>
                 </ScrollArea>
-                <Button onClick={handleImport} className="w-full mt-4">
-                  Import {importData.length} Items
+                
+                {importResult && (
+                  <div className="mt-4 p-3 rounded-md border bg-muted/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      {importResult.errors === 0 ? (
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 text-yellow-600" />
+                      )}
+                      <span className="font-medium">Import Results</span>
+                    </div>
+                    <div className="text-sm space-y-1">
+                      <div>✅ Successfully processed: {importResult.success} items</div>
+                      {importResult.errors > 0 && (
+                        <div>⚠️ Errors encountered: {importResult.errors} items</div>
+                      )}
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setShowImportDialog(false);
+                          setImportData([]);
+                          setImportFile(null);
+                          setImportResult(null);
+                        }}
+                      >
+                        Close
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setImportData([]);
+                          setImportFile(null);
+                          setImportResult(null);
+                          const input = document.getElementById('csvFile') as HTMLInputElement;
+                          if (input) input.value = '';
+                        }}
+                      >
+                        Import Another
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
+                <Button 
+                  onClick={handleImport} 
+                  className="w-full mt-4" 
+                  disabled={importing}
+                >
+                  {importing ? "Importing..." : `Import ${importData.length} Items`}
                 </Button>
               </div>
             )}

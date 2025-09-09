@@ -1,69 +1,41 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Clock, CheckCircle, XCircle, Search, Filter } from "lucide-react";
-import { useState } from "react";
+import { Clock, CheckCircle, XCircle, Search, Filter, Users } from "lucide-react";
+import { useApprovals, type GroupedApproval } from "./hooks/useApprovals";
+import { EmployeeApprovalDetail } from "./components/EmployeeApprovalDetail";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 const Approvals = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const { 
+    searchTerm, 
+    setSearchTerm, 
+    pendingApprovals, 
+    groupedApprovals,
+    recentActions, 
+    loading, 
+    handleApproveRating, 
+    handleUpdateRating,
+    handleRejectRating
+  } = useApprovals();
 
-  const pendingApprovals = [
-    {
-      id: 1,
-      type: "Skill Assessment",
-      requester: "John Smith",
-      title: "React Advanced Certification",
-      description: "Request to update skill level from Intermediate to Advanced",
-      priority: "High",
-      submitDate: "2024-01-20",
-      dueDate: "2024-01-25"
-    },
-    {
-      id: 2,
-      type: "Training Request",
-      requester: "Sarah Johnson", 
-      title: "AWS Cloud Architecture Course",
-      description: "External training course approval needed",
-      priority: "Medium",
-      submitDate: "2024-01-19",
-      dueDate: "2024-01-28"
-    },
-    {
-      id: 3,
-      type: "Skill Addition",
-      requester: "Mike Chen",
-      title: "Add Machine Learning Skills",
-      description: "Request to add new skill category and assessment",
-      priority: "Low",
-      submitDate: "2024-01-18",
-      dueDate: "2024-01-30"
-    }
-  ];
+  const [selectedEmployee, setSelectedEmployee] = useState<GroupedApproval | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
-  const recentActions = [
-    {
-      id: 1,
-      action: "Approved",
-      title: "Python Certification Request",
-      approver: "Admin User",
-      date: "2024-01-20"
-    },
-    {
-      id: 2,
-      action: "Rejected",
-      title: "Overtime Skills Assessment",
-      approver: "Manager User",
-      date: "2024-01-19"
-    },
-    {
-      id: 3,
-      action: "Approved",
-      title: "New Team Member Onboarding",
-      approver: "HR Manager",
-      date: "2024-01-18"
-    }
-  ];
+  // Filter grouped approvals based on search term
+  const filteredGroupedApprovals = groupedApprovals.filter(group => 
+    group.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    group.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const highPriorityCount = pendingApprovals.filter(a => a.priority === 'High').length;
+
+  const handleEmployeeClick = (employee: GroupedApproval) => {
+    setSelectedEmployee(employee);
+    setDetailOpen(true);
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -108,8 +80,8 @@ const Approvals = () => {
             <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">2 high priority</p>
+            <div className="text-2xl font-bold">{pendingApprovals.length}</div>
+            <p className="text-xs text-muted-foreground">{highPriorityCount} high priority</p>
           </CardContent>
         </Card>
         
@@ -119,8 +91,8 @@ const Approvals = () => {
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">5</div>
-            <p className="text-xs text-muted-foreground">+2 from yesterday</p>
+            <div className="text-2xl font-bold">{recentActions.length}</div>
+            <p className="text-xs text-muted-foreground">Recent approvals</p>
           </CardContent>
         </Card>
         
@@ -141,7 +113,7 @@ const Approvals = () => {
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search approvals..."
+            placeholder="Search by employee name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8"
@@ -154,40 +126,53 @@ const Approvals = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Pending Approvals */}
+        {/* Pending Approvals by Employee */}
         <Card>
           <CardHeader>
-            <CardTitle>Pending Approvals</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Pending Approvals by Employee
+            </CardTitle>
             <CardDescription>
-              Items awaiting your review and approval
+              Review skill ratings grouped by employee
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {pendingApprovals.map((approval) => (
-                <div key={approval.id} className="border rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="space-y-1">
-                      <p className="font-medium">{approval.title}</p>
-                      <p className="text-sm text-muted-foreground">{approval.description}</p>
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <LoadingSpinner />
+              </div>
+            ) : filteredGroupedApprovals.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {searchTerm ? 'No employees match your search.' : 'No pending approvals at this time.'}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredGroupedApprovals.map((employee) => (
+                  <div 
+                    key={employee.employeeId} 
+                    className="border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => handleEmployeeClick(employee)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <p className="font-medium">{employee.employeeName}</p>
+                        <p className="text-sm text-muted-foreground">{employee.email}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Submitted: {employee.submitDate}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant="secondary" className="mb-2">
+                          {employee.pendingCount} rating{employee.pendingCount > 1 ? 's' : ''}
+                        </Badge>
+                        <p className="text-xs text-muted-foreground">Click to review</p>
+                      </div>
                     </div>
-                    <Badge className={getPriorityColor(approval.priority)}>
-                      {approval.priority}
-                    </Badge>
                   </div>
-                  
-                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-                    <span>By: {approval.requester}</span>
-                    <span>Due: {approval.dueDate}</span>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button size="sm" className="flex-1">Approve</Button>
-                    <Button size="sm" variant="outline" className="flex-1">Reject</Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -218,6 +203,16 @@ const Approvals = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Employee Detail Modal */}
+        <EmployeeApprovalDetail
+          employee={selectedEmployee}
+          open={detailOpen}
+          onOpenChange={setDetailOpen}
+          onApprove={handleApproveRating}
+          onUpdateRating={handleUpdateRating}
+          onReject={handleRejectRating}
+        />
     </div>
   );
 };

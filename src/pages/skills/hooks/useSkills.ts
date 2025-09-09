@@ -117,23 +117,24 @@ export const useSkills = () => {
     });
   };
 
-  const handleSaveRatings = async () => {
-    if (!profile?.user_id || pendingRatings.size === 0) return;
+  const handleSaveRatings = async (ratingsWithComments: Array<{id: string, type: 'skill' | 'subskill', rating: 'high' | 'medium' | 'low', comment: string}>) => {
+    if (!profile?.user_id || ratingsWithComments.length === 0) return;
 
     try {
-      const ratingsToSave = Array.from(pendingRatings.values());
-      console.log('🔄 Saving ratings:', ratingsToSave);
+      console.log('🔄 Saving ratings with comments:', ratingsWithComments);
       console.log('👤 User ID:', profile.user_id);
       
       // Prepare data for UPSERT
-      const ratingsData = ratingsToSave.map(rating => {
+      const ratingsData = ratingsWithComments.map(rating => {
         if (rating.type === 'skill') {
           return {
             user_id: profile.user_id,
             skill_id: rating.id,
             subskill_id: null,
             rating: rating.rating,
-            status: 'draft' as const
+            status: 'submitted' as const,
+            self_comment: rating.comment,
+            submitted_at: new Date().toISOString()
           };
         } else {
           // Handle subskill rating
@@ -145,7 +146,9 @@ export const useSkills = () => {
             skill_id: subskill.skill_id,
             subskill_id: rating.id,
             rating: rating.rating,
-            status: 'draft' as const
+            status: 'submitted' as const,
+            self_comment: rating.comment,
+            submitted_at: new Date().toISOString()
           };
         }
       }).filter(Boolean);
@@ -165,9 +168,51 @@ export const useSkills = () => {
 
       if (error) throw error;
 
+      // Notify all tech leads for submissions (including self-ratings by tech leads)
+      const isCurrentUserTechLead = profile.role === 'tech_lead';
+      
+      if (isCurrentUserTechLead) {
+        // If current user is a tech lead rating themselves, notify all other tech leads
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert(
+            (await supabase
+              .from('profiles')
+              .select('user_id')
+              .eq('role', 'tech_lead')
+              .neq('user_id', profile.user_id)
+            ).data?.map(techLead => ({
+              user_id: techLead.user_id,
+              title: 'Tech Lead Self-Rating Submitted',
+              message: `${profile.full_name} has submitted ${ratingsWithComments.length} self-rating${ratingsWithComments.length > 1 ? 's' : ''} for peer review.`,
+              type: 'info' as const
+            })) || []
+          );
+
+        if (notificationError) {
+          console.error('❌ Error creating tech lead notifications:', notificationError);
+        }
+      } else if (profile.tech_lead_id) {
+        // Regular employee - notify their assigned tech lead
+        console.log('📨 Sending notification to tech lead:', profile.tech_lead_id);
+        
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: profile.tech_lead_id,
+            title: 'New Skill Ratings Submitted',
+            message: `${profile.full_name} has submitted ${ratingsWithComments.length} skill rating${ratingsWithComments.length > 1 ? 's' : ''} for your review.`,
+            type: 'info'
+          });
+
+        if (notificationError) {
+          console.error('❌ Error creating notification:', notificationError);
+        }
+      }
+
       toast({
-        title: "✅ Ratings saved successfully",
-        description: `${ratingsToSave.length} rating${ratingsToSave.length > 1 ? 's' : ''} saved`,
+        title: "✅ Ratings submitted successfully",
+        description: `${ratingsWithComments.length} rating${ratingsWithComments.length > 1 ? 's' : ''} submitted for approval`,
       });
 
       setPendingRatings(new Map());
@@ -176,7 +221,7 @@ export const useSkills = () => {
       console.error('❌ Error saving ratings:', error);
       toast({
         title: "Error",
-        description: "Failed to save ratings",
+        description: "Failed to submit ratings",
         variant: "destructive",
       });
     }
@@ -192,7 +237,7 @@ export const useSkills = () => {
     fetchData,
     handleSkillRate,
     handleSubskillRate,
-    handleSaveRatings,
+    handleSaveRatings: handleSaveRatings,
     setPendingRatings
   };
 };
