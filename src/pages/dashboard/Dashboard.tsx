@@ -8,13 +8,13 @@ const Dashboard = () => {
     profile
   } = useAuth();
   console.log('Profile data:', profile); // Debug log
-  const isEmployee = profile?.role === 'employee';
+  const canAccessDashboard = profile?.role === 'employee' || profile?.role === 'tech_lead';
   if (!profile) {
     return <div className="flex items-center justify-center h-64">
         <LoadingSpinner />
       </div>;
   }
-  if (!isEmployee) {
+  if (!canAccessDashboard) {
     return <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
