@@ -217,7 +217,7 @@ export function SkillsGapAnalysis() {
       const entry = skillMap.get(key)!;
       if (rating.status === 'approved') {
         entry.approved = rating;
-      } else if (rating.status === 'submitted' || rating.status === 'draft') {
+      } else if (rating.status === 'submitted') {
         entry.self = rating;
       }
     });

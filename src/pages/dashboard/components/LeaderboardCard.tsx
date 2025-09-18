@@ -233,45 +233,45 @@ export const LeaderboardCard = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0 space-y-3">
-        {/* User's Current Rank */}
+        {/* User's Current Rank - Compact */}
         {userRank && userRank.rank > 6 && !showFull && (
-          <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 flex-shrink-0">
+          <div className="p-2 rounded-lg bg-primary/5 border border-primary/20 flex-shrink-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-primary">#{userRank.rank}</span>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-semibold text-primary">#{userRank.rank}</span>
                   {getRankMovementIcon(userRank.rankMovement)}
                 </div>
                 <div>
-                  <p className="font-medium text-primary text-sm">You</p>
+                  <p className="font-medium text-primary text-xs">You</p>
                   <p className="text-xs text-primary/70">{userRank.total_xp} XP</p>
                 </div>
               </div>
               <Badge variant="outline" className="text-primary border-primary/30 text-xs">
-                Level {userRank.level}
+                L{userRank.level}
               </Badge>
             </div>
           </div>
         )}
 
-        {/* Top Rankings - Scrollable */}
-        <div className="flex-1 min-h-0 overflow-y-auto space-y-2">
+        {/* Top Rankings - Scrollable - Compact */}
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-1">
           {topUsers.map((entry) => (
             <div 
               key={entry.user_id} 
-              className={`p-2.5 rounded-lg border ${getRankColor(entry.rank)} ${
-                entry.user_id === profile?.user_id ? 'ring-2 ring-primary/20' : ''
+              className={`p-2 rounded border ${getRankColor(entry.rank)} ${
+                entry.user_id === profile?.user_id ? 'ring-1 ring-primary/20' : ''
               }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="flex flex-col items-center gap-1 min-w-[32px]">
+                  <div className="flex flex-col items-center gap-1 min-w-[24px]">
                     <div className="flex items-center gap-1">
                       {getRankIcon(entry.rank)}
                     </div>
                     {getRankMovementIcon(entry.rankMovement)}
                   </div>
-                  <Avatar className={`h-8 w-8 ${entry.rank <= 3 ? 'ring-2 ring-offset-1' : ''} ${
+                  <Avatar className={`h-6 w-6 ${entry.rank <= 3 ? 'ring-1 ring-offset-1' : ''} ${
                     entry.rank === 1 ? 'ring-yellow-400' : 
                     entry.rank === 2 ? 'ring-gray-400' : 
                     entry.rank === 3 ? 'ring-amber-500' : ''
@@ -287,7 +287,7 @@ export const LeaderboardCard = () => {
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className={`font-medium text-sm truncate ${
+                      <p className={`font-medium text-xs truncate ${
                         entry.user_id === profile?.user_id ? 'text-primary font-bold' : ''
                       }`}>
                         {entry.user_id === profile?.user_id ? 'You' : entry.full_name}
@@ -300,7 +300,7 @@ export const LeaderboardCard = () => {
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <Zap className="h-3 w-3" />
+                        <Zap className="h-2 w-2" />
                         {entry.total_xp.toLocaleString()}
                       </span>
                       {entry.current_streak > 0 && (

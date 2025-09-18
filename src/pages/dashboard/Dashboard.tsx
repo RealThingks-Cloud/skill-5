@@ -8,7 +8,7 @@ const Dashboard = () => {
     profile
   } = useAuth();
   console.log('Profile data:', profile); // Debug log
-  const canAccessDashboard = profile?.role === 'employee' || profile?.role === 'tech_lead';
+  const canAccessDashboard = false; // Dashboard removed for all user roles
   if (!profile) {
     return <div className="flex items-center justify-center h-64">
         <LoadingSpinner />
@@ -24,14 +24,9 @@ const Dashboard = () => {
         </div>
       </div>;
   }
-  return <div className="h-screen overflow-hidden p-4">
-      <div className="mb-4">
-        
-        
-      </div>
-
+  return <div className="h-full overflow-hidden p-3">
       {/* Optimized Two-Column Layout */}
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-4 h-[calc(100vh-120px)]">
+      <div className="grid gap-3 grid-cols-1 lg:grid-cols-4 h-full">
         {/* Left Column - Skill Progress (Full Height) */}
         <div className="lg:col-span-3 h-full">
           <SkillMetersCard />

@@ -44,6 +44,85 @@ export const getRatingValue = (rating: 'high' | 'medium' | 'low'): number => {
   }
 };
 
+export const canUpgradeRating = (
+  currentRating: 'high' | 'medium' | 'low' | null,
+  targetRating: 'high' | 'medium' | 'low',
+  status: string,
+  nextUpgradeDate?: string
+): { canUpgrade: boolean; reason?: string; daysLeft?: number } => {
+  // If no current rating, any rating is allowed
+  if (!currentRating) {
+    return { canUpgrade: true };
+  }
+
+  // If rejected, allow any rating (resubmission)
+  if (status === 'rejected') {
+    return { canUpgrade: true };
+  }
+
+  // If current rating is high and approved, no upgrades allowed
+  if (currentRating === 'high' && status === 'approved') {
+    return { canUpgrade: false, reason: 'High rating is permanently locked' };
+  }
+
+  const currentValue = getRatingValue(currentRating);
+  const targetValue = getRatingValue(targetRating);
+
+  // Only allow upward progression for non-rejected ratings
+  if (targetValue <= currentValue) {
+    return { canUpgrade: false, reason: 'You can only upgrade to higher ratings' };
+  }
+
+  // Check 30-day cool-down period for approved ratings
+  if (status === 'approved' && nextUpgradeDate) {
+    const upgradeDate = new Date(nextUpgradeDate);
+    const today = new Date();
+    
+    if (today < upgradeDate) {
+      const daysLeft = Math.ceil((upgradeDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      return { 
+        canUpgrade: false, 
+        reason: `You can upgrade this subskill after ${daysLeft} days`,
+        daysLeft 
+      };
+    }
+  }
+
+  return { canUpgrade: true };
+};
+
+export const getAvailableRatingOptions = (
+  currentRating: 'high' | 'medium' | 'low' | null,
+  status: string,
+  nextUpgradeDate?: string
+): ('high' | 'medium' | 'low')[] => {
+  const allRatings: ('high' | 'medium' | 'low')[] = ['low', 'medium', 'high'];
+  
+  // If no current rating or rejected status, all options available
+  if (!currentRating || status === 'rejected') {
+    return allRatings;
+  }
+
+  // If high and approved, no options available (locked)
+  if (currentRating === 'high' && status === 'approved') {
+    return [];
+  }
+
+  // Check cool-down period
+  if (status === 'approved' && nextUpgradeDate) {
+    const upgradeDate = new Date(nextUpgradeDate);
+    const today = new Date();
+    
+    if (today < upgradeDate) {
+      return []; // No upgrades during cool-down
+    }
+  }
+
+  // Return only higher ratings
+  const currentValue = getRatingValue(currentRating);
+  return allRatings.filter(rating => getRatingValue(rating) > currentValue);
+};
+
 export const calculateCategoryProgress = (
   categoryId: string,
   skills: any[],
@@ -58,6 +137,7 @@ export const calculateCategoryProgress = (
   let ratingCounts = { high: 0, medium: 0, low: 0 };
   let approvedCount = 0;
   let pendingCount = 0;
+  let rejectedCount = 0;
   
   categorySkills.forEach(skill => {
     // Get subskills for this skill
@@ -78,6 +158,12 @@ export const calculateCategoryProgress = (
           const pendingRating = userSkills.find(r => r.subskill_id === subskill.id && r.status === 'submitted');
           if (pendingRating) {
             pendingCount++;
+          } else {
+            // Check for rejected ratings
+            const rejectedRating = userSkills.find(r => r.subskill_id === subskill.id && r.status === 'rejected');
+            if (rejectedRating) {
+              rejectedCount++;
+            }
           }
         }
       });
@@ -95,6 +181,12 @@ export const calculateCategoryProgress = (
         const pendingRating = userSkills.find(r => r.skill_id === skill.id && !r.subskill_id && r.status === 'submitted');
         if (pendingRating) {
           pendingCount++;
+        } else {
+          // Check for rejected ratings
+          const rejectedRating = userSkills.find(r => r.skill_id === skill.id && !r.subskill_id && r.status === 'rejected');
+          if (rejectedRating) {
+            rejectedCount++;
+          }
         }
       }
     }
@@ -108,6 +200,7 @@ export const calculateCategoryProgress = (
     progressPercentage,
     ratingCounts,
     approvedCount,
-    pendingCount
+    pendingCount,
+    rejectedCount
   };
 };

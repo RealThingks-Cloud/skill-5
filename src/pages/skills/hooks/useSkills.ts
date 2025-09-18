@@ -124,6 +124,30 @@ export const useSkills = () => {
       console.log('🔄 Saving ratings with comments:', ratingsWithComments);
       console.log('👤 User ID:', profile.user_id);
       
+      // Step 1: Get category IDs for auto-addition to dashboard
+      const categoryIds = new Set<string>();
+      
+      for (const rating of ratingsWithComments) {
+        if (rating.type === 'skill') {
+          const skill = skills.find(s => s.id === rating.id);
+          if (skill?.category_id) {
+            categoryIds.add(skill.category_id);
+            console.log('📂 Found category for skill:', { skillName: skill.name, categoryId: skill.category_id });
+          }
+        } else {
+          const subskill = subskills.find(s => s.id === rating.id);
+          if (subskill?.skill_id) {
+            const parentSkill = skills.find(s => s.id === subskill.skill_id);
+            if (parentSkill?.category_id) {
+              categoryIds.add(parentSkill.category_id);
+              console.log('📂 Found category for subskill:', { subskillName: subskill.name, skillName: parentSkill.name, categoryId: parentSkill.category_id });
+            }
+          }
+        }
+      }
+      
+      console.log('📋 Categories to potentially add:', Array.from(categoryIds));
+      
       // Prepare data for UPSERT
       const ratingsData = ratingsWithComments.map(rating => {
         if (rating.type === 'skill') {
@@ -232,7 +256,60 @@ export const useSkills = () => {
         description: `${ratingsWithComments.length} rating${ratingsWithComments.length > 1 ? 's' : ''} submitted for approval`,
       });
 
+      // Step 2: Auto-add categories to dashboard if not already visible
+      if (categoryIds.size > 0) {
+        console.log('🔍 Checking current user category preferences...');
+        
+        const { data: currentPrefs, error: prefsError } = await supabase
+          .from('user_category_preferences')
+          .select('visible_category_ids')
+          .eq('user_id', profile.user_id)
+          .maybeSingle();
+          
+        if (prefsError && prefsError.code !== 'PGRST116') {
+          console.error('❌ Error fetching preferences:', prefsError);
+        }
+        
+        const currentVisibleIds = currentPrefs?.visible_category_ids || [];
+        const categoriesToAdd = Array.from(categoryIds).filter(catId => !currentVisibleIds.includes(catId));
+        
+        console.log('📊 Current visible categories:', currentVisibleIds);
+        console.log('➕ New categories to add:', categoriesToAdd);
+        
+        if (categoriesToAdd.length > 0) {
+          const updatedVisibleIds = [...currentVisibleIds, ...categoriesToAdd];
+          
+          const { error: updateError } = await supabase
+            .from('user_category_preferences')
+            .upsert({
+              user_id: profile.user_id,
+              visible_category_ids: updatedVisibleIds
+            }, {
+              onConflict: 'user_id'
+            });
+            
+          if (updateError) {
+            console.error('❌ Error updating category preferences:', updateError);
+          } else {
+            console.log('✅ Successfully added categories to dashboard:', categoriesToAdd);
+            
+            // Get category names for notification
+            const addedCategoryNames = skillCategories
+              .filter(cat => categoriesToAdd.includes(cat.id))
+              .map(cat => cat.name);
+              
+            toast({
+              title: "Categories Added",
+              description: `${addedCategoryNames.length} categor${addedCategoryNames.length === 1 ? 'y' : 'ies'} added to your dashboard: ${addedCategoryNames.join(', ')}`,
+            });
+          }
+        } else {
+          console.log('ℹ️ All categories already visible on dashboard');
+        }
+      }
+
       setPendingRatings(new Map());
+      console.log('🔄 Refreshing dashboard data...');
       await fetchData();
     } catch (error) {
       console.error('❌ Error saving ratings:', error);

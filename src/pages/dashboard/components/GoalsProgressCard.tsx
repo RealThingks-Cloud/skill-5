@@ -97,7 +97,7 @@ export const GoalsProgressCard = () => {
         return {
           ...userSkill,
           rating: userSkill.rating as 'high' | 'medium' | 'low',
-          status: userSkill.status as 'draft' | 'submitted' | 'approved' | 'rejected',
+          status: userSkill.status as 'submitted' | 'approved' | 'rejected',
           skill: skill ? {
             id: skill.id,
             category_id: skill.category_id,

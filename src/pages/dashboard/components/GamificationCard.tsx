@@ -145,77 +145,77 @@ export const GamificationCard = () => {
           Your skill development journey
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* XP and Level */}
-        <div className="flex items-center justify-between p-4 bg-white/50 rounded-lg border border-purple-200">
-          <div className="flex items-center gap-4">
+      <CardContent className="space-y-3">
+        {/* XP and Level - Compact */}
+        <div className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-purple-200">
+          <div className="flex items-center gap-3">
             <motion.div 
-              className="p-3 bg-purple-100 rounded-full"
+              className="p-2 bg-purple-100 rounded-full"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              <Star className="h-6 w-6 text-purple-600" />
+              <Star className="h-5 w-5 text-purple-600" />
             </motion.div>
             <div>
-              <p className="font-bold text-xl text-purple-900">Level {gamificationData.level}</p>
-              <p className="text-purple-700">{gamificationData.total_xp} XP</p>
+              <p className="font-bold text-lg text-purple-900">Level {gamificationData.level}</p>
+              <p className="text-sm text-purple-700">{gamificationData.total_xp} XP</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm text-purple-700">Next Level</p>
-            <p className="font-semibold text-purple-900">{neededXP} XP needed</p>
+            <p className="text-xs text-purple-700">Next Level</p>
+            <p className="font-semibold text-sm text-purple-900">{neededXP} XP needed</p>
           </div>
         </div>
 
         {/* Progress to Next Level */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-xs">
             <span className="text-purple-700">Level Progress</span>
             <span className="font-semibold text-purple-900">{Math.round(progressPercentage)}%</span>
           </div>
           <Progress 
             value={progressPercentage} 
-            className="h-3 bg-purple-100" 
+            className="h-2 bg-purple-100" 
             style={{ '--progress-foreground': 'hsl(var(--purple-600))' } as React.CSSProperties}
           />
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="text-center p-3 bg-white/50 rounded-lg border border-purple-200">
+        {/* Stats Grid - Compact */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="text-center p-2 bg-white/50 rounded border border-purple-200">
             <div className="flex items-center justify-center mb-1">
-              <Flame className="h-4 w-4 text-orange-500" />
-              <span className="ml-1 font-bold text-lg">{gamificationData.current_streak}</span>
+              <Flame className="h-3 w-3 text-orange-500" />
+              <span className="ml-1 font-bold text-sm">{gamificationData.current_streak}</span>
             </div>
-            <p className="text-xs text-purple-700">Current Streak</p>
+            <p className="text-xs text-purple-700">Streak</p>
           </div>
           
-          <div className="text-center p-3 bg-white/50 rounded-lg border border-purple-200">
+          <div className="text-center p-2 bg-white/50 rounded border border-purple-200">
             <div className="flex items-center justify-center mb-1">
-              <Trophy className="h-4 w-4 text-yellow-500" />
-              <span className="ml-1 font-bold text-lg">{gamificationData.goals_achieved_count}</span>
+              <Trophy className="h-3 w-3 text-yellow-500" />
+              <span className="ml-1 font-bold text-sm">{gamificationData.goals_achieved_count}</span>
             </div>
-            <p className="text-xs text-purple-700">Goals Done</p>
+            <p className="text-xs text-purple-700">Goals</p>
           </div>
           
-          <div className="text-center p-3 bg-white/50 rounded-lg border border-purple-200">
+          <div className="text-center p-2 bg-white/50 rounded border border-purple-200">
             <div className="flex items-center justify-center mb-1">
-              <Award className="h-4 w-4 text-purple-500" />
-              <span className="ml-1 font-bold text-lg">{achievements.length}</span>
+              <Award className="h-3 w-3 text-purple-500" />
+              <span className="ml-1 font-bold text-sm">{achievements.length}</span>
             </div>
             <p className="text-xs text-purple-700">Badges</p>
           </div>
         </div>
 
-        {/* Recent Achievements */}
+        {/* Recent Achievements - Compact */}
         {achievements.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="font-semibold text-sm text-purple-900 flex items-center gap-2">
-              <Award className="h-4 w-4" />
+          <div className="space-y-1">
+            <h4 className="font-semibold text-xs text-purple-900 flex items-center gap-1">
+              <Award className="h-3 w-3" />
               Recent Badges
             </h4>
-            <div className="flex flex-wrap gap-2">
-              {achievements.slice(0, 3).map((achievement) => (
+            <div className="flex flex-wrap gap-1">
+              {achievements.slice(0, 2).map((achievement) => (
                 <motion.div
                   key={achievement.id}
                   initial={{ scale: 0 }}
@@ -224,7 +224,7 @@ export const GamificationCard = () => {
                 >
                   <Badge 
                     variant="outline" 
-                    className="bg-white/70 border-purple-200 text-purple-800 hover:bg-white/90 transition-colors cursor-help"
+                    className="bg-white/70 border-purple-200 text-purple-800 hover:bg-white/90 transition-colors cursor-help text-xs"
                     title={achievement.description}
                   >
                     <span className="mr-1">{achievement.badge_icon}</span>
@@ -236,19 +236,19 @@ export const GamificationCard = () => {
           </div>
         )}
 
-        {/* Recent XP Activity */}
+        {/* Recent XP Activity - Compact */}
         {recentXPEvents.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="font-semibold text-sm text-purple-900 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
+          <div className="space-y-1">
+            <h4 className="font-semibold text-xs text-purple-900 flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
               Recent Activity
             </h4>
             <div className="space-y-1">
               {recentXPEvents.slice(0, 2).map((event, index) => (
                 <div key={index} className="flex items-center justify-between text-xs">
-                  <span className="text-purple-700">{event.event}</span>
+                  <span className="text-purple-700 truncate">{event.event}</span>
                   <div className="flex items-center gap-1 text-purple-900">
-                    <span className="font-semibold">+{event.xp} XP</span>
+                    <span className="font-semibold">+{event.xp}</span>
                     <span className="text-purple-600">• {event.date}</span>
                   </div>
                 </div>

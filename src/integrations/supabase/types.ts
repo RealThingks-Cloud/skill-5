@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      approval_audit_logs: {
+        Row: {
+          action: string
+          approver_comment: string | null
+          approver_id: string
+          created_at: string
+          employee_comment: string | null
+          id: string
+          metadata: Json | null
+          new_status: string | null
+          previous_status: string | null
+          rating_id: string
+        }
+        Insert: {
+          action: string
+          approver_comment?: string | null
+          approver_id: string
+          created_at?: string
+          employee_comment?: string | null
+          id?: string
+          metadata?: Json | null
+          new_status?: string | null
+          previous_status?: string | null
+          rating_id: string
+        }
+        Update: {
+          action?: string
+          approver_comment?: string | null
+          approver_id?: string
+          created_at?: string
+          employee_comment?: string | null
+          id?: string
+          metadata?: Json | null
+          new_status?: string | null
+          previous_status?: string | null
+          rating_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_audit_logs_rating_id_fkey"
+            columns: ["rating_id"]
+            isOneToOne: false
+            referencedRelation: "employee_ratings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approval_history: {
         Row: {
           action: string
@@ -106,6 +153,7 @@ export type Database = {
           approver_comment: string | null
           created_at: string
           id: string
+          next_upgrade_date: string | null
           rating: string
           self_comment: string | null
           skill_id: string
@@ -121,6 +169,7 @@ export type Database = {
           approver_comment?: string | null
           created_at?: string
           id?: string
+          next_upgrade_date?: string | null
           rating: string
           self_comment?: string | null
           skill_id: string
@@ -136,6 +185,7 @@ export type Database = {
           approver_comment?: string | null
           created_at?: string
           id?: string
+          next_upgrade_date?: string | null
           rating?: string
           self_comment?: string | null
           skill_id?: string
@@ -745,6 +795,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_category_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          visible_category_ids: string[]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          visible_category_ids?: string[]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          visible_category_ids?: string[]
+        }
+        Relationships: []
+      }
       user_gamification: {
         Row: {
           best_streak: number | null
@@ -858,6 +932,19 @@ export type Database = {
       calculate_goal_progress: {
         Args: { current_rating_param: string; target_rating_param: string }
         Returns: number
+      }
+      calculate_next_upgrade_date: {
+        Args: { approved_at_param: string }
+        Returns: string
+      }
+      can_upgrade_rating: {
+        Args: {
+          approved_at_param: string
+          current_rating_param: string
+          current_status_param: string
+          target_rating_param: string
+        }
+        Returns: boolean
       }
       cleanup_old_notifications: {
         Args: Record<PropertyKey, never>

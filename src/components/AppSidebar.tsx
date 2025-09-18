@@ -15,7 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/useAuth';
-
+import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 import { useToast } from '@/hooks/use-toast';
 
 const items = [
@@ -23,7 +23,7 @@ const items = [
     title: 'Dashboard', 
     url: '/', 
     icon: LayoutDashboard,
-    roles: ['employee', 'tech_lead', 'manager', 'admin'] 
+    roles: ['manager', 'admin'] 
   },
   { 
     title: 'Skills', 
@@ -35,8 +35,7 @@ const items = [
     title: 'Approvals', 
     url: '/approvals', 
     icon: CheckCircle,
-    roles: ['tech_lead', 'manager', 'admin'],
-    badge: 3 // This would be dynamic in real app
+    roles: ['tech_lead', 'manager', 'admin']
   },
   { 
     title: 'Admin', 
@@ -49,11 +48,12 @@ const items = [
 const bottomItems: any[] = [];
 
 export function AppSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
   const { toast } = useToast();
+  const { pendingCount } = usePendingApprovals();
   const currentPath = location.pathname;
 
   const toggleSidebar = () => {
@@ -91,19 +91,21 @@ return (
       }}
     >
       {/* Logo */}
-      <div className="flex items-center border-b border-sidebar-border h-16 px-4">
-        <div className="flex items-center">
-          <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
-            <div className="bg-sidebar-primary rounded-lg p-1.5">
-              <SkillIcon className="h-5 w-5 text-sidebar-primary-foreground" />
-            </div>
+      <div className="flex items-center border-b border-sidebar-border h-16">
+        <div className="flex items-center w-full pl-3 pr-3">
+          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+            <img 
+              src="/lovable-uploads/54adcce8-be73-4135-bb3c-fb8fd83846cf.png" 
+              alt="Logo" 
+              className="h-8 w-8" 
+            />
           </div>
           <div 
-            className={`ml-3 text-sidebar-foreground font-semibold text-base whitespace-nowrap transition-all duration-300 overflow-hidden ${
+            className={`ml-0 text-sidebar-foreground font-semibold text-base whitespace-nowrap transition-all duration-300 overflow-hidden ${
               collapsed ? 'opacity-0 w-0' : 'opacity-100 w-auto'
             }`}
           >
-            RealThings
+            RealThingks
           </div>
         </div>
       </div>
@@ -134,9 +136,9 @@ return (
                   }`}
                 >
                   <span className="text-sm font-medium">{item.title}</span>
-                  {item.badge && (
+                  {item.title === 'Approvals' && pendingCount > 0 && (
                     <Badge variant="secondary" className="ml-2 text-xs bg-sidebar-accent text-sidebar-foreground/70 flex-shrink-0">
-                      {item.badge}
+                      {pendingCount}
                     </Badge>
                   )}
                 </div>
@@ -243,7 +245,7 @@ return (
                 >
                   <div className="text-left">
                     <div className="text-sm font-medium truncate max-w-32">{displayName}</div>
-                    <div className="text-xs text-sidebar-foreground/50">Click to logout</div>
+                    <div className="text-xs text-sidebar-foreground/50"></div>
                   </div>
                 </div>
               </button>
@@ -259,7 +261,7 @@ return (
                     <TooltipContent side="right" className="ml-2">
                       <div className="text-center">
                         <p className="font-medium">{displayName}</p>
-                        <p className="text-xs text-muted-foreground">Click to logout</p>
+                        <p className="text-xs text-muted-foreground"></p>
                       </div>
                     </TooltipContent>
                   </Tooltip>
