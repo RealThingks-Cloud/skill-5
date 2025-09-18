@@ -15,12 +15,14 @@ export const SkillMetersCard = () => {
   } | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const calculateCategoryScore = (breakdown: { high: number; medium: number; low: number; unrated: number }) => {
-    const totalRated = breakdown.high + breakdown.medium + breakdown.low;
-    if (totalRated === 0) return 0;
+    const totalItems = breakdown.high + breakdown.medium + breakdown.low + breakdown.unrated;
+    if (totalItems === 0) return 0;
     
-    const totalPoints = (breakdown.high * 5) + (breakdown.medium * 3) + (breakdown.low * 1);
-    const maxPossiblePoints = totalRated * 5;
-    return Math.round((totalPoints / maxPossiblePoints) * 100);
+    // Points-based scoring: High=5, Medium=3, Low=1
+    const userPoints = (breakdown.high * 5) + (breakdown.medium * 3) + (breakdown.low * 1);
+    const maxPossiblePoints = totalItems * 5; // All items could be rated High (5 points each)
+    
+    return Math.round((userPoints / maxPossiblePoints) * 100);
   };
 
   const getStatusFromPercentage = (percentage: number) => {
@@ -134,7 +136,7 @@ export const SkillMetersCard = () => {
                               {meter.categoryName}
                             </CardTitle>
                             <div className="text-sm text-muted-foreground mt-1">
-                              {ratedCount}/{totalSkills} skills rated
+                              {ratedCount}/{totalSkills} skills • {meter.score}% complete
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -183,7 +185,7 @@ export const SkillMetersCard = () => {
                               </div>
                               <div className="border-t pt-1 flex justify-between font-medium">
                                 <span>Total:</span>
-                                <span>{(meter.breakdown.high * 5) + (meter.breakdown.medium * 3) + (meter.breakdown.low * 1)} / {ratedCount * 5} pts</span>
+                                <span>{(meter.breakdown.high * 5) + (meter.breakdown.medium * 3) + (meter.breakdown.low * 1)} / {totalSkills * 5} pts</span>
                               </div>
                             </div>
                           </div>
