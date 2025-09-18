@@ -62,6 +62,35 @@ export const CategoryCard = ({
     pendingCount,
     rejectedCount
   } = progressData;
+
+  // Calculate category score based on points (High=5, Medium=3, Low=1)
+  const categoryScore = React.useMemo(() => {
+    const totalRated = ratingCounts.high + ratingCounts.medium + ratingCounts.low;
+    if (totalRated === 0) return 0;
+    
+    const totalPoints = (ratingCounts.high * 5) + (ratingCounts.medium * 3) + (ratingCounts.low * 1);
+    const maxPossiblePoints = totalRated * 5;
+    return Math.round((totalPoints / maxPossiblePoints) * 100);
+  }, [ratingCounts]);
+
+  // Determine status based on score
+  const statusInfo = React.useMemo(() => {
+    if (categoryScore >= 80) return { 
+      status: 'Expert', 
+      color: 'bg-green-500 text-white', 
+      bgTint: 'bg-green-50 border-green-200' 
+    };
+    if (categoryScore >= 40) return { 
+      status: 'Moderate', 
+      color: 'bg-yellow-500 text-white', 
+      bgTint: 'bg-yellow-50 border-yellow-200' 
+    };
+    return { 
+      status: 'Beginner', 
+      color: 'bg-red-500 text-white', 
+      bgTint: 'bg-red-50 border-red-200' 
+    };
+  }, [categoryScore]);
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -148,7 +177,7 @@ export const CategoryCard = ({
         duration: 0.2
       }
     }} className="group">
-        <Card className="relative h-full w-full border border-border/20 bg-gradient-to-br from-card to-muted/20 hover:shadow-lg transition-all duration-300 overflow-hidden rounded-xl">
+        <Card className={`relative h-full w-full border border-border/20 bg-gradient-to-br from-card to-muted/20 hover:shadow-lg transition-all duration-300 overflow-hidden rounded-xl ${ratingCounts.high + ratingCounts.medium + ratingCounts.low > 0 ? statusInfo.bgTint : ''}`}>
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 opacity-0 group-hover:opacity-30 transition-opacity duration-300 pointer-events-none" />
           
@@ -184,13 +213,20 @@ export const CategoryCard = ({
 
           <CardHeader className="pb-2 px-4 pt-4">
             <div className="space-y-1">
-              <motion.h3 className="text-2xl font-bold text-foreground line-clamp-2 leading-tight" whileHover={{
-              scale: 1.02
-            }} transition={{
-              duration: 0.2
-            }}>
-                {category.name}
-              </motion.h3>
+              <div className="flex items-start justify-between">
+                <motion.h3 className="text-2xl font-bold text-foreground line-clamp-2 leading-tight flex-1" whileHover={{
+                  scale: 1.02
+                }} transition={{
+                  duration: 0.2
+                }}>
+                  {category.name}
+                </motion.h3>
+                {ratingCounts.high + ratingCounts.medium + ratingCounts.low > 0 && (
+                  <Badge className={`${statusInfo.color} font-medium ml-2 shrink-0`}>
+                    {statusInfo.status}
+                  </Badge>
+                )}
+              </div>
               
               {category.description && <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                   {category.description}
