@@ -1,9 +1,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { dateFormatters } from "@/utils/formatters";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { dateFormatters } from "@/utils/formatters";
 
 interface LogDetailModalProps {
   open: boolean;
@@ -24,6 +24,7 @@ interface LogDetailModalProps {
 interface ResolvedNames {
   [key: string]: string;
 }
+
 export default function LogDetailModal({
   open,
   onOpenChange,
@@ -113,7 +114,8 @@ export default function LogDetailModal({
 
   if (!log) return null;
 
-  return <Dialog open={open} onOpenChange={onOpenChange}>
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Activity Log Details</DialogTitle>
@@ -138,7 +140,6 @@ export default function LogDetailModal({
           <div>
             <p className="text-sm font-medium text-muted-foreground">Performed By</p>
             <p className="text-sm mt-1">{log.username}</p>
-            
           </div>
 
           <Separator />
@@ -159,39 +160,29 @@ export default function LogDetailModal({
             <p className="text-sm mt-1">{log.description}</p>
           </div>
 
-          {log.record_reference && <>
-              <Separator />
-              <div>
-                
-                
-              </div>
-            </>}
-
           {/* Metadata */}
-          {log.metadata && Object.keys(log.metadata).length > 0 && <>
+          {log.metadata && Object.keys(log.metadata).length > 0 && (
+            <>
               <Separator />
               <div>
                 <p className="text-sm font-medium text-muted-foreground mb-2">Additional Details</p>
                 <div className="bg-muted/50 rounded-md p-3 space-y-2">
-                  {Object.entries(log.metadata).map(([key, value]) => <div key={key} className="grid grid-cols-3 gap-2">
+                  {Object.entries(log.metadata).map(([key, value]) => (
+                    <div key={key} className="grid grid-cols-3 gap-2">
                       <p className="text-xs font-medium text-muted-foreground capitalize">
                         {key.replace(/_/g, ' ')}:
                       </p>
                       <p className="text-xs col-span-2 break-all">
                         {getDisplayValue(key, value)}
                       </p>
-                    </div>)}
+                    </div>
+                  ))}
                 </div>
               </div>
-            </>}
-
-          {/* Raw Log ID */}
-          <Separator />
-          <div>
-            
-            
-          </div>
+            </>
+          )}
         </div>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }
