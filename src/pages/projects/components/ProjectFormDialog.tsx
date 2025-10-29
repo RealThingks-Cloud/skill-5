@@ -33,9 +33,18 @@ interface ProjectFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   projectId?: string | null;
+  prefilledSubskills?: Array<{ skill_id: string; subskill_id: string }>;
+  prefilledUserIds?: string[];
 }
 
-export default function ProjectFormDialog({ open, onOpenChange, onSuccess, projectId }: ProjectFormDialogProps) {
+export default function ProjectFormDialog({ 
+  open, 
+  onOpenChange, 
+  onSuccess, 
+  projectId,
+  prefilledSubskills = [],
+  prefilledUserIds = [],
+}: ProjectFormDialogProps) {
   const [loading, setLoading] = useState(false);
   const [subskills, setSubskills] = useState<Subskill[]>([]);
   const [subskillSearchQuery, setSubskillSearchQuery] = useState('');
@@ -57,10 +66,17 @@ export default function ProjectFormDialog({ open, onOpenChange, onSuccess, proje
       if (projectId) {
         loadProjectData();
       } else {
+        // When creating new project, use prefilled data
         resetForm();
+        if (prefilledSubskills.length > 0) {
+          setSelectedSubskills(prefilledSubskills);
+        }
+        if (prefilledUserIds.length > 0) {
+          setSelectedEmployees(prefilledUserIds);
+        }
       }
     }
-  }, [open, projectId]);
+  }, [open, projectId, prefilledSubskills, prefilledUserIds]);
 
   useEffect(() => {
     if (selectedSubskills.length > 0) {

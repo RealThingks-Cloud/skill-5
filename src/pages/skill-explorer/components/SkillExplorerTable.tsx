@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowUpDown, Search } from "lucide-react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { getRatingColor, formatRole } from "../utils/skillExplorerHelpers";
@@ -27,6 +28,9 @@ interface SkillExplorerTableProps {
   selections: Selection[];
   sortField: string;
   onSort: (field: string) => void;
+  selectedEngineers: string[];
+  onToggleEngineer: (userId: string) => void;
+  onToggleAll: () => void;
 }
 
 export function SkillExplorerTable({
@@ -35,14 +39,28 @@ export function SkillExplorerTable({
   selections,
   sortField,
   onSort,
+  selectedEngineers,
+  onToggleEngineer,
+  onToggleAll,
 }: SkillExplorerTableProps) {
+  const allSelected = results.length > 0 && selectedEngineers.length === results.length;
+  const someSelected = selectedEngineers.length > 0 && selectedEngineers.length < results.length;
+
   return (
-    <div className="overflow-auto max-h-[600px]">
+    <div className="h-full overflow-auto">
       <Table>
         <TableHeader>
           <TableRow className="border-0">
+            <TableHead className="w-12 sticky left-0 bg-muted z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] border-r border-border/20">
+              <Checkbox
+                checked={allSelected}
+                onCheckedChange={onToggleAll}
+                aria-label="Select all engineers"
+                className={someSelected ? "data-[state=checked]:bg-primary/50" : ""}
+              />
+            </TableHead>
             <TableHead
-              className="cursor-pointer font-semibold text-base min-w-[200px] sticky left-0 bg-muted z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20"
+              className="cursor-pointer font-semibold text-base min-w-[200px] sticky left-12 bg-muted z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20"
               onClick={() => onSort("name")}
             >
               <div className="flex items-center gap-2 py-1">
@@ -53,7 +71,7 @@ export function SkillExplorerTable({
               </div>
             </TableHead>
             <TableHead
-              className="cursor-pointer font-semibold text-base min-w-[140px] sticky left-[200px] bg-muted z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20"
+              className="cursor-pointer font-semibold text-base min-w-[140px] sticky left-[calc(48px+200px)] bg-muted z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20"
               onClick={() => onSort("role")}
             >
               <div className="flex items-center gap-2 py-1">
@@ -86,13 +104,13 @@ export function SkillExplorerTable({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={2 + selections.length} className="text-center py-16">
+              <TableCell colSpan={3 + selections.length} className="text-center py-16">
                 <LoadingSpinner />
               </TableCell>
             </TableRow>
           ) : selections.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={2} className="h-[350px]">
+              <TableCell colSpan={3} className="h-[350px]">
                 <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground h-full">
                   <Search className="h-10 w-10 opacity-20" />
                   <p className="text-base font-medium">Select subskills above to see matching engineers</p>
@@ -101,7 +119,7 @@ export function SkillExplorerTable({
             </TableRow>
           ) : results.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={2 + selections.length} className="text-center py-16">
+              <TableCell colSpan={3 + selections.length} className="text-center py-16">
                 <div className="flex flex-col items-center gap-3 text-muted-foreground">
                   <Search className="h-10 w-10 opacity-20" />
                   <p className="text-base font-medium">No engineers found matching the selected criteria</p>
@@ -114,10 +132,17 @@ export function SkillExplorerTable({
                 key={user.user_id}
                 className="hover:bg-muted/30 transition-all duration-200 animate-fade-in border-b hover:border-primary/20"
               >
-                <TableCell className="font-medium text-base sticky left-0 bg-card z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.05)] py-4 border-r border-border/20">
+                <TableCell className="sticky left-0 bg-card z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.05)] py-4 border-r border-border/20">
+                  <Checkbox
+                    checked={selectedEngineers.includes(user.user_id)}
+                    onCheckedChange={() => onToggleEngineer(user.user_id)}
+                    aria-label={`Select ${user.full_name}`}
+                  />
+                </TableCell>
+                <TableCell className="font-medium text-base sticky left-12 bg-card z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.05)] py-4 border-r border-border/20">
                   {user.full_name}
                 </TableCell>
-                <TableCell className="sticky left-[200px] bg-card z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.05)] py-4 border-r border-border/20">
+                <TableCell className="sticky left-[calc(48px+200px)] bg-card z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.05)] py-4 border-r border-border/20">
                   <span className="text-base">{formatRole(user.role)}</span>
                 </TableCell>
                 {selections.map((selection) => {

@@ -21,6 +21,7 @@ import { useEmployeeExplorer } from "./hooks/useEmployeeExplorer";
 import { EmployeeExplorerView } from "./components/EmployeeExplorerView";
 import { getRatingValueForSubskill, getHighestRatingValue } from "./utils/skillExplorerHelpers";
 import { format } from "date-fns";
+import ProjectFormDialog from "../projects/components/ProjectFormDialog";
 
 interface SubskillWithRating {
   subskill: { id: string; name: string; skill_id: string };
@@ -49,6 +50,8 @@ export default function SkillExplorer() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<SortField>("matching_count");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [selectedEngineers, setSelectedEngineers] = useState<string[]>([]);
+  const [showProjectDialog, setShowProjectDialog] = useState(false);
 
   // Custom hooks
   const {
@@ -219,6 +222,32 @@ export default function SkillExplorer() {
     }
   };
 
+  const handleToggleEngineer = (userId: string) => {
+    setSelectedEngineers((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    );
+  };
+
+  const handleToggleAllEngineers = () => {
+    if (selectedEngineers.length === filteredAndSortedResults.length) {
+      setSelectedEngineers([]);
+    } else {
+      setSelectedEngineers(filteredAndSortedResults.map((user) => user.user_id));
+    }
+  };
+
+  const handleAddToProject = () => {
+    if (selectedEngineers.length === 0) {
+      toast({
+        title: "No Engineers Selected",
+        description: "Please select at least one engineer to add to a project",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowProjectDialog(true);
+  };
+
   // Filter and sort results
   const filteredAndSortedResults = results
     .filter((user) =>
@@ -276,55 +305,81 @@ export default function SkillExplorer() {
   }
 
   return (
-    <div className="p-8 space-y-8 w-full">
-      <SkillExplorerHeader onExport={handleExport} />
+    <div className="h-screen flex flex-col overflow-hidden">
+      <div className="flex-shrink-0 p-8 pb-4">
+        <SkillExplorerHeader
+          onExport={handleExport}
+          onAddToProject={handleAddToProject}
+          selectedCount={selectedEngineers.length}
+        />
+      </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "skills" | "employees")} className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="skills">Skill Explorer</TabsTrigger>
-          <TabsTrigger value="employees">Employee Explorer</TabsTrigger>
-        </TabsList>
+      <div className="flex-1 overflow-hidden px-8">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "skills" | "employees")} className="h-full flex flex-col">
+          <TabsList className="mb-4 flex-shrink-0">
+            <TabsTrigger value="skills">Skill Explorer</TabsTrigger>
+            <TabsTrigger value="employees">Employee Explorer</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="skills" className="space-y-6">
-          {/* Search Bar and Add Skill Button */}
-          <div className="flex items-center gap-4">
-            <div className="w-full max-w-lg">
-              <EnhancedSkillSearch
-                categories={allCategories}
-                skills={allSkills}
-                subskills={allSubskills}
-                onSubskillSelect={handleSearchSubskillSelect}
-                selectedSubskillIds={pendingSelections.map((s) => s.subskill_id)}
-                placeholder="Search skills & subskills..."
-              />
+          <TabsContent value="skills" className="flex-1 flex flex-col space-y-4 overflow-hidden mt-0">
+            {/* Search Bar and Add Skill Button */}
+            <div className="flex items-center gap-4 flex-shrink-0">
+              <div className="w-full max-w-lg">
+                <EnhancedSkillSearch
+                  categories={allCategories}
+                  skills={allSkills}
+                  subskills={allSubskills}
+                  onSubskillSelect={handleSearchSubskillSelect}
+                  selectedSubskillIds={pendingSelections.map((s) => s.subskill_id)}
+                  placeholder="Search skills & subskills..."
+                />
+              </div>
+              <Button
+                onClick={() => setCategoryModalOpen(true)}
+                size="default"
+                className="gap-2 shrink-0 transition-all hover:scale-105"
+              >
+                <Plus className="h-4 w-4" />
+                Add Skill
+              </Button>
             </div>
-            <Button
-              onClick={() => setCategoryModalOpen(true)}
-              size="default"
-              className="gap-2 shrink-0 transition-all hover:scale-105"
-            >
-              <Plus className="h-4 w-4" />
-              Add Skill
-            </Button>
-          </div>
 
-          {/* Main Table Container */}
-          <div className="bg-card border rounded-lg overflow-hidden shadow-md">
-            {/* Toolbar */}
-            <div className="flex items-center justify-between px-6 h-16 border-b bg-muted/30">
-              <h2 className="text-base font-semibold">Selected Skills ({pendingSelections.length})</h2>
-              <div className="flex gap-2">
-                {pendingSelections.length > 0 && (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPendingSelections([])}
-                      disabled={submitting}
-                      className="h-9 px-3 text-sm transition-all hover:scale-105"
-                    >
-                      Clear All
-                    </Button>
+            {/* Main Table Container - Full Height */}
+            <div className="flex-1 bg-card border rounded-lg overflow-hidden shadow-md flex flex-col">
+              {/* Toolbar */}
+              <div className="flex items-center justify-between px-6 h-16 border-b bg-muted/30 flex-shrink-0">
+                <h2 className="text-base font-semibold">Selected Skills ({pendingSelections.length})</h2>
+                <div className="flex gap-2">
+                  {pendingSelections.length > 0 && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPendingSelections([])}
+                        disabled={submitting}
+                        className="h-9 px-3 text-sm transition-all hover:scale-105"
+                      >
+                        Clear All
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLoadPresetOpen(true)}
+                        className="h-9 px-3 text-sm transition-all hover:scale-105"
+                      >
+                        Load
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleSaveAll}
+                        disabled={submitting}
+                        className="h-9 px-3 text-sm transition-all hover:scale-105"
+                      >
+                        Save All
+                      </Button>
+                    </>
+                  )}
+                  {pendingSelections.length === 0 && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -333,57 +388,46 @@ export default function SkillExplorer() {
                     >
                       Load
                     </Button>
-                    <Button
-                      size="sm"
-                      onClick={handleSaveAll}
-                      disabled={submitting}
-                      className="h-9 px-3 text-sm transition-all hover:scale-105"
-                    >
-                      Save All
-                    </Button>
-                  </>
-                )}
-                {pendingSelections.length === 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setLoadPresetOpen(true)}
-                    className="h-9 px-3 text-sm transition-all hover:scale-105"
-                  >
-                    Load
-                  </Button>
-                )}
+                  )}
+                </div>
+              </div>
+
+              {/* Selected Skills Pills */}
+              {pendingSelections.length > 0 && (
+                <div className="flex-shrink-0">
+                  <SelectedSkillsPills
+                    selections={pendingSelections}
+                    onRemove={handleRemoveSelection}
+                    onUpdateRating={handleUpdateRating}
+                  />
+                </div>
+              )}
+
+              {/* Results Table - Scrollable */}
+              <div className="flex-1 overflow-auto">
+                <SkillExplorerTable
+                  loading={loading}
+                  results={filteredAndSortedResults}
+                  selections={pendingSelections}
+                  sortField={sortField}
+                  onSort={handleSort}
+                  selectedEngineers={selectedEngineers}
+                  onToggleEngineer={handleToggleEngineer}
+                  onToggleAll={handleToggleAllEngineers}
+                />
               </div>
             </div>
+          </TabsContent>
 
-            {/* Selected Skills Pills */}
-            {pendingSelections.length > 0 && (
-              <SelectedSkillsPills
-                selections={pendingSelections}
-                onRemove={handleRemoveSelection}
-                onUpdateRating={handleUpdateRating}
-              />
-            )}
-
-            {/* Results Table */}
-            <SkillExplorerTable
-              loading={loading}
-              results={filteredAndSortedResults}
-              selections={pendingSelections}
-              sortField={sortField}
-              onSort={handleSort}
-            />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="employees" className="space-y-6">
-          <div className="bg-card border rounded-lg overflow-hidden shadow-md">
-            <div className="p-6">
-              <EmployeeExplorerView employees={employees} loading={employeesLoading} />
+          <TabsContent value="employees" className="flex-1 overflow-hidden mt-0">
+            <div className="h-full bg-card border rounded-lg overflow-hidden shadow-md">
+              <div className="p-6 h-full overflow-auto">
+                <EmployeeExplorerView employees={employees} loading={employeesLoading} />
+              </div>
             </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* Modals */}
       <CategorySelectionModal
@@ -426,6 +470,24 @@ export default function SkillExplorer() {
         onClose={() => setLoadPresetOpen(false)}
         onLoad={handleLoadPresetConfirm}
         userId={profile?.user_id || ""}
+      />
+
+      <ProjectFormDialog
+        open={showProjectDialog}
+        onOpenChange={setShowProjectDialog}
+        prefilledSubskills={pendingSelections.map((sel) => ({
+          skill_id: sel.skill_id,
+          subskill_id: sel.subskill_id,
+        }))}
+        prefilledUserIds={selectedEngineers}
+        onSuccess={() => {
+          setShowProjectDialog(false);
+          setSelectedEngineers([]);
+          toast({
+            title: "Success",
+            description: "Project created successfully",
+          });
+        }}
       />
     </div>
   );
