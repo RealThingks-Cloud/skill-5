@@ -87,8 +87,8 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.id);
 
-    // Check if user has admin or manager role
-    const { data: profile, error: profileError } = await supabase
+    // Check if user has admin or management role using admin client
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role')
       .eq('user_id', user.id)
@@ -104,12 +104,12 @@ serve(async (req) => {
       });
     }
 
-    // Allow admin and manager roles to manage users
-    const allowedRoles = ['admin', 'manager'];
+    // Allow admin and management roles to manage users
+    const allowedRoles = ['admin', 'management'];
     if (!profile || !allowedRoles.includes(profile.role)) {
       console.error('Insufficient permissions. User role:', profile?.role);
       return new Response(JSON.stringify({ 
-        error: 'Insufficient permissions. Admin or Manager access required',
+        error: 'Insufficient permissions. Admin or Management access required',
         userRole: profile?.role 
       }), {
         status: 403,
@@ -316,11 +316,11 @@ serve(async (req) => {
         throw new Error(`Unknown action: ${action}`);
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('User management error:', error);
     return new Response(JSON.stringify({ 
-      error: error.message || 'Internal server error',
-      details: error.toString()
+      error: error?.message || 'Internal server error',
+      details: error?.toString() || 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

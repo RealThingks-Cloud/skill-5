@@ -4,15 +4,19 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Clock, CheckCircle, XCircle, Search, Filter, MoreVertical, Check, X, ChevronDown, User, Calendar } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Search, Filter, MoreVertical, Check, X, ChevronDown, User, Calendar, History } from "lucide-react";
 import { useState } from "react";
 import { useApprovals } from "./hooks/useApprovals";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { useApprovalHistory } from "./hooks/useApprovalHistory";
+import { ApprovalHistoryModal } from "./components/ApprovalHistoryModal";
 
 const Approvals = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedApproval, setExpandedApproval] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const { pendingApprovals, recentActions, loading, handleApproveRating, handleRejectRating } = useApprovals();
+  const { groupedHistory, loading: historyLoading } = useApprovalHistory();
 
   if (loading) {
     return (
@@ -57,8 +61,8 @@ const Approvals = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="h-full flex flex-col p-6">
+      <div className="flex items-center justify-between flex-shrink-0 mb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Approvals</h1>
           <p className="text-muted-foreground">
@@ -68,7 +72,7 @@ const Approvals = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3 flex-shrink-0 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
@@ -104,11 +108,18 @@ const Approvals = () => {
       </div>
 
       {/* Search and Filter */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 flex-shrink-0 mb-6">
+        <Button 
+          variant="outline"
+          onClick={() => setShowHistory(true)}
+        >
+          <History className="mr-2 h-4 w-4" />
+          Approval History
+        </Button>
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search approvals..."
+            placeholder="Search employees..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8"
@@ -120,16 +131,16 @@ const Approvals = () => {
         </Button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Pending Approvals */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Pending Approvals</CardTitle>
-            <CardDescription>
-              Items awaiting your review and approval
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+      {/* Pending Approvals - Full Width */}
+      <Card className="flex-1 flex flex-col min-h-0">
+        <CardHeader className="flex-shrink-0">
+          <CardTitle>Pending Approvals</CardTitle>
+          <CardDescription>
+            Items awaiting your review and approval
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col min-h-0 p-6">
+          <div className="flex-1 overflow-auto">
             <div className="space-y-4">
               {pendingApprovals && pendingApprovals.length > 0 ? (
                 pendingApprovals.map((approval) => (
@@ -187,14 +198,14 @@ const Approvals = () => {
                           
                           {/* Action Buttons */}
                           <div className="flex gap-2 pt-2">
-                            <Button 
-                              size="sm"
-                              onClick={() => handleApproveRating(approval.id)}
-                              className="bg-green-600 hover:bg-green-700 text-white"
-                            >
-                              <Check className="mr-2 h-4 w-4" />
-                              Approve
-                            </Button>
+                          <Button 
+                            size="sm"
+                            variant="success"
+                            onClick={() => handleApproveRating(approval.id)}
+                          >
+                            <Check className="mr-2 h-4 w-4" />
+                            Approve
+                          </Button>
                             <Button 
                               size="sm" 
                               variant="outline"
@@ -216,42 +227,16 @@ const Approvals = () => {
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Recent Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Actions</CardTitle>
-            <CardDescription>
-              Recently processed approval requests
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActions && recentActions.length > 0 ? (
-                recentActions.map((action) => (
-                  <div key={action.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="space-y-1">
-                      <p className="font-medium text-sm">{action.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        By: {action.approver} • {action.date}
-                      </p>
-                    </div>
-                    <Badge className={getActionColor(action.action)}>
-                      {action.action}
-                    </Badge>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-sm text-muted-foreground">No recent actions</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Approval History Modal */}
+      <ApprovalHistoryModal
+        open={showHistory}
+        onOpenChange={setShowHistory}
+        groupedHistory={groupedHistory}
+      />
     </div>
   );
 };

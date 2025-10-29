@@ -72,6 +72,7 @@ export interface EmployeeRating {
   submitted_at?: string;
   approved_at?: string;
   next_upgrade_date?: string;
+  na_status?: boolean;
   skill?: Skill;
   subskill?: Subskill;
   approver?: Profile;

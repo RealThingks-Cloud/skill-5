@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import UserAccess from "./user-access";
-import { Users, Wrench } from "lucide-react";
+import Backup from "./components/Backup";
+import { Users, Wrench, Database } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { USER_ROLES } from "@/utils/constants";
@@ -11,7 +12,7 @@ const Admin = () => {
   const [userCounts, setUserCounts] = useState({
     employees: 0,
     techLeads: 0,
-    managers: 0
+    management: 0
   });
 
   useEffect(() => {
@@ -25,9 +26,9 @@ const Admin = () => {
           const counts = profiles.reduce((acc, profile) => {
             if (profile.role === USER_ROLES.EMPLOYEE) acc.employees++;
             else if (profile.role === USER_ROLES.TECH_LEAD) acc.techLeads++;
-            else if (profile.role === USER_ROLES.MANAGER) acc.managers++;
+            else if (profile.role === USER_ROLES.MANAGEMENT) acc.management++;
             return acc;
-          }, { employees: 0, techLeads: 0, managers: 0 });
+          }, { employees: 0, techLeads: 0, management: 0 });
 
           setUserCounts(counts);
         }
@@ -53,8 +54,8 @@ const Admin = () => {
       color: "text-green-600" 
     },
     { 
-      title: "Managers", 
-      value: userCounts.managers.toString(), 
+      title: "Management", 
+      value: userCounts.management.toString(), 
       icon: Users, 
       color: "text-purple-600" 
     }
@@ -72,6 +73,12 @@ const Admin = () => {
       title: 'Skills Management',
       description: 'Manage skills and competencies',
       icon: Wrench
+    },
+    {
+      id: 'backup',
+      title: 'Backup & Restore',
+      description: 'Export and import application data',
+      icon: Database
     }
   ];
 
@@ -103,6 +110,10 @@ const Admin = () => {
         </Card>
       </div>
     );
+  }
+
+  if (activeTab === 'backup') {
+    return <Backup onBack={() => setActiveTab('overview')} />;
   }
 
   return (

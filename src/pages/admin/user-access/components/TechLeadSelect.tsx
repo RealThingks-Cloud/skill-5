@@ -23,7 +23,7 @@ export function TechLeadSelect({ user, onUpdate }: TechLeadSelectProps) {
       try {
         const users = await userService.getUsers();
         const availableTechLeads = users.filter(u => 
-          [USER_ROLES.TECH_LEAD, USER_ROLES.MANAGER, USER_ROLES.ADMIN].includes(u.role as any) &&
+          [USER_ROLES.TECH_LEAD, USER_ROLES.MANAGEMENT, USER_ROLES.ADMIN].includes(u.role as any) &&
           u.user_id !== user.user_id // Don't allow self-assignment
         );
         setTechLeads(availableTechLeads);
@@ -64,8 +64,8 @@ export function TechLeadSelect({ user, onUpdate }: TechLeadSelectProps) {
     setIsEditing(false);
   };
 
-  // Don't show tech lead assignment for admins, managers, or tech leads themselves
-  if ([USER_ROLES.ADMIN, USER_ROLES.MANAGER, USER_ROLES.TECH_LEAD].includes(user.role as any)) {
+  // Don't show tech lead assignment for admins, management, or tech leads themselves
+  if ([USER_ROLES.ADMIN, USER_ROLES.MANAGEMENT, USER_ROLES.TECH_LEAD].includes(user.role as any)) {
     return <span className="text-muted-foreground text-sm">—</span>;
   }
 
@@ -97,14 +97,16 @@ export function TechLeadSelect({ user, onUpdate }: TechLeadSelectProps) {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="none">No tech lead</SelectItem>
-          {techLeads.map((techLead) => (
-            <SelectItem key={techLead.user_id} value={techLead.user_id}>
-              <div>
-                <div className="font-medium">{techLead.full_name}</div>
-                <div className="text-xs text-muted-foreground">{techLead.role}</div>
-              </div>
-            </SelectItem>
-          ))}
+          {techLeads
+            .filter(techLead => techLead.user_id && techLead.user_id.trim() !== '')
+            .map((techLead) => (
+              <SelectItem key={techLead.user_id} value={techLead.user_id}>
+                <div>
+                  <div className="font-medium">{techLead.full_name}</div>
+                  <div className="text-xs text-muted-foreground">{techLead.role}</div>
+                </div>
+              </SelectItem>
+            ))}
         </SelectContent>
       </Select>
       <Button
