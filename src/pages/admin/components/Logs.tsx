@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Filter, Users, CheckCircle, Database, Shield, Settings, Briefcase, BarChart, AlertCircle, Eye, UserCog, RotateCcw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useActivityLogs } from "../hooks/useActivityLogs";
-import { format } from "date-fns";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { dateFormatters } from "@/utils/formatters";
 import {
   Table,
   TableBody,
@@ -282,7 +282,7 @@ export default function Logs({ onBack }: LogsProps) {
                       <TableCell className="py-2 text-xs font-medium">{log.action_type}</TableCell>
                       <TableCell className="py-2 text-xs">{log.username}</TableCell>
                        <TableCell className="py-2 text-xs text-muted-foreground">
-                        {format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}
+                        {dateFormatters.formatDateTimeCompact(log.created_at)}
                       </TableCell>
                       <TableCell className="py-2 text-xs">
                         <div className="flex items-center gap-2">

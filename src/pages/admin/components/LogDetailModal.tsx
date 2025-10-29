@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { format } from "date-fns";
+import { dateFormatters } from "@/utils/formatters";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -147,7 +147,7 @@ export default function LogDetailModal({
           <div>
             <p className="text-sm font-medium text-muted-foreground">Timestamp</p>
             <p className="text-sm mt-1">
-              {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss")}
+              {dateFormatters.formatDateTimeWithSeconds(log.created_at)}
             </p>
           </div>
 
