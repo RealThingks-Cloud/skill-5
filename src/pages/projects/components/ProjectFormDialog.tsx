@@ -32,9 +32,10 @@ interface ProjectFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  projectId?: string | null;
 }
 
-export default function ProjectFormDialog({ open, onOpenChange, onSuccess }: ProjectFormDialogProps) {
+export default function ProjectFormDialog({ open, onOpenChange, onSuccess, projectId }: ProjectFormDialogProps) {
   const [loading, setLoading] = useState(false);
   const [subskills, setSubskills] = useState<Subskill[]>([]);
   const [subskillSearchQuery, setSubskillSearchQuery] = useState('');
@@ -53,8 +54,13 @@ export default function ProjectFormDialog({ open, onOpenChange, onSuccess }: Pro
   useEffect(() => {
     if (open) {
       fetchSubskills();
+      if (projectId) {
+        loadProjectData();
+      } else {
+        resetForm();
+      }
     }
-  }, [open]);
+  }, [open, projectId]);
 
   useEffect(() => {
     if (selectedSubskills.length > 0) {
@@ -65,6 +71,55 @@ export default function ProjectFormDialog({ open, onOpenChange, onSuccess }: Pro
       setShowSuggestions(false);
     }
   }, [selectedSubskills]);
+
+  const loadProjectData = async () => {
+    if (!projectId) return;
+
+    try {
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+
+      if (projectError) throw projectError;
+
+      setFormData({
+        name: project.name || '',
+        description: project.description || '',
+        start_date: project.start_date || '',
+        end_date: project.end_date || '',
+      });
+
+      // Load required skills
+      const { data: skillsData } = await supabase
+        .from('project_required_skills')
+        .select('skill_id, subskill_id')
+        .eq('project_id', projectId);
+
+      if (skillsData) {
+        setSelectedSubskills(
+          skillsData.map((s: any) => ({
+            skill_id: s.skill_id,
+            subskill_id: s.subskill_id,
+          }))
+        );
+      }
+
+      // Load assigned employees
+      const { data: assignmentsData } = await supabase
+        .from('project_assignments')
+        .select('user_id')
+        .eq('project_id', projectId);
+
+      if (assignmentsData) {
+        setSelectedEmployees(assignmentsData.map((a: any) => a.user_id));
+      }
+    } catch (error) {
+      console.error('Error loading project data:', error);
+      toast.error('Failed to load project data');
+    }
+  };
 
   const fetchSubskills = async () => {
     const { data, error } = await supabase
@@ -239,57 +294,113 @@ export default function ProjectFormDialog({ open, onOpenChange, onSuccess }: Pro
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Create project
-      const { data: project, error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          name: formData.name,
-          description: formData.description,
-          start_date: formData.start_date || null,
-          end_date: formData.end_date || null,
-          status: 'awaiting_approval',
-          created_by: user.id,
-        })
-        .select()
-        .single();
+      if (projectId) {
+        // Update existing project
+        const { error: projectError } = await supabase
+          .from('projects')
+          .update({
+            name: formData.name,
+            description: formData.description,
+            start_date: formData.start_date || null,
+            end_date: formData.end_date || null,
+          })
+          .eq('id', projectId);
 
-      if (projectError) throw projectError;
+        if (projectError) throw projectError;
 
-      // Add required skills (subskills with their parent skills)
-      const skillsToInsert = selectedSubskills.map(s => ({
-        project_id: project.id,
-        skill_id: s.skill_id,
-        subskill_id: s.subskill_id,
-      }));
+        // Delete existing skills and re-insert
+        await supabase
+          .from('project_required_skills')
+          .delete()
+          .eq('project_id', projectId);
 
-      const { error: skillsError } = await supabase
-        .from('project_required_skills')
-        .insert(skillsToInsert);
-
-      if (skillsError) throw skillsError;
-
-      // Assign selected employees
-      if (selectedEmployees.length > 0) {
-        const assignmentsToInsert = selectedEmployees.map(userId => ({
-          project_id: project.id,
-          user_id: userId,
-          assigned_by: user.id,
+        const skillsToInsert = selectedSubskills.map(s => ({
+          project_id: projectId,
+          skill_id: s.skill_id,
+          subskill_id: s.subskill_id,
         }));
 
-        const { error: assignError } = await supabase
-          .from('project_assignments')
-          .insert(assignmentsToInsert);
+        const { error: skillsError } = await supabase
+          .from('project_required_skills')
+          .insert(skillsToInsert);
 
-        if (assignError) throw assignError;
+        if (skillsError) throw skillsError;
+
+        // Delete existing assignments and re-insert
+        await supabase
+          .from('project_assignments')
+          .delete()
+          .eq('project_id', projectId);
+
+        if (selectedEmployees.length > 0) {
+          const assignmentsToInsert = selectedEmployees.map(userId => ({
+            project_id: projectId,
+            user_id: userId,
+            assigned_by: user.id,
+          }));
+
+          const { error: assignError } = await supabase
+            .from('project_assignments')
+            .insert(assignmentsToInsert);
+
+          if (assignError) throw assignError;
+        }
+
+        toast.success('Project updated successfully!');
+      } else {
+        // Create new project
+        const { data: project, error: projectError } = await supabase
+          .from('projects')
+          .insert({
+            name: formData.name,
+            description: formData.description,
+            start_date: formData.start_date || null,
+            end_date: formData.end_date || null,
+            status: 'awaiting_approval',
+            created_by: user.id,
+          })
+          .select()
+          .single();
+
+        if (projectError) throw projectError;
+
+        // Add required skills (subskills with their parent skills)
+        const skillsToInsert = selectedSubskills.map(s => ({
+          project_id: project.id,
+          skill_id: s.skill_id,
+          subskill_id: s.subskill_id,
+        }));
+
+        const { error: skillsError } = await supabase
+          .from('project_required_skills')
+          .insert(skillsToInsert);
+
+        if (skillsError) throw skillsError;
+
+        // Assign selected employees
+        if (selectedEmployees.length > 0) {
+          const assignmentsToInsert = selectedEmployees.map(userId => ({
+            project_id: project.id,
+            user_id: userId,
+            assigned_by: user.id,
+          }));
+
+          const { error: assignError } = await supabase
+            .from('project_assignments')
+            .insert(assignmentsToInsert);
+
+          if (assignError) throw assignError;
+        }
+
+        toast.success('Project created successfully! Awaiting approval.');
       }
 
-      toast.success('Project created successfully! Awaiting approval.');
       onSuccess();
       onOpenChange(false);
       resetForm();
     } catch (error: any) {
-      console.error('Error creating project:', error);
-      toast.error(error.message || 'Failed to create project');
+      console.error('Error saving project:', error);
+      toast.error(error.message || 'Failed to save project');
     } finally {
       setLoading(false);
     }
@@ -314,7 +425,7 @@ export default function ProjectFormDialog({ open, onOpenChange, onSuccess }: Pro
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Project</DialogTitle>
+          <DialogTitle>{projectId ? 'Edit Project' : 'Create New Project'}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -477,7 +588,7 @@ export default function ProjectFormDialog({ open, onOpenChange, onSuccess }: Pro
           </Button>
           <Button onClick={handleSubmit} disabled={loading}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Project
+            {projectId ? 'Update Project' : 'Create Project'}
           </Button>
         </DialogFooter>
       </DialogContent>

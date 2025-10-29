@@ -3,11 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Users, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Calendar, Users, CheckCircle2, XCircle, Clock, Pencil } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import SkillValidationDialog from './SkillValidationDialog';
+import ProjectFormDialog from './ProjectFormDialog';
 
 interface ProjectDetailDialogProps {
   projectId: string | null;
@@ -45,6 +46,7 @@ export default function ProjectDetailDialog({
 }: ProjectDetailDialogProps) {
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [validationDialog, setValidationDialog] = useState<{
     open: boolean;
     userId: string;
@@ -260,6 +262,7 @@ export default function ProjectDetailDialog({
   const canApprove = ['admin', 'management'].includes(userRole) && project?.status === 'awaiting_approval';
   const canComplete = ['tech_lead', 'management', 'admin'].includes(userRole) && project?.status === 'active';
   const canValidate = ['tech_lead', 'management', 'admin'].includes(userRole);
+  const canEdit = ['tech_lead', 'management', 'admin'].includes(userRole);
 
   if (loading || !project) {
     return (
@@ -283,7 +286,19 @@ export default function ProjectDetailDialog({
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-start justify-between gap-4">
-              <DialogTitle className="text-2xl">{project.name}</DialogTitle>
+              <div className="flex items-center gap-3 flex-1">
+                <DialogTitle className="text-2xl">{project.name}</DialogTitle>
+                {canEdit && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setEditDialogOpen(true)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
               <Badge className={getStatusBadge(project.status)}>
                 {project.status.replace('_', ' ')}
               </Badge>
@@ -415,6 +430,16 @@ export default function ProjectDetailDialog({
         projectId={projectId || ''}
         userId={validationDialog.userId}
         userName={validationDialog.userName}
+        onSuccess={() => {
+          fetchProjectDetails();
+          onSuccess();
+        }}
+      />
+
+      <ProjectFormDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        projectId={projectId}
         onSuccess={() => {
           fetchProjectDetails();
           onSuccess();
