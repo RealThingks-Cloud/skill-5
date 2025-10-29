@@ -59,8 +59,11 @@ export function useActivityLogs({
   const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
-    fetchLogs();
-    fetchUsers();
+    const loadData = async () => {
+      await fetchUsers();
+      await fetchLogs();
+    };
+    loadData();
   }, [module, searchQuery, dateRange, userId, page, sortBy, sortOrder]);
 
   const fetchLogs = async () => {
