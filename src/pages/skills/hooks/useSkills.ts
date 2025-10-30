@@ -43,26 +43,50 @@ export const useSkills = () => {
         .select('*')
         .order('name');
 
-      // Fetch employee ratings - ONLY current user's ratings for Skills Management page
-      // This page is for personal skill management, not for viewing all employees
+      // Fetch employee ratings based on role
+      // Admins and Management: See ALL users' data for oversight
+      // Employees and Tech Leads: See only their own data
       let userSkillsData: any[] = [];
       if (profile.user_id) {
-        console.log('📊 Fetching employee ratings for user:', profile.user_id);
+        console.log('📊 Fetching employee ratings for user:', profile.user_id, 'role:', profile.role);
         
         let allRatingsData: any[] = [];
         
-        // ALWAYS fetch only current user's ratings - this is personal skills management
-        const { data: ratingsData, error: ratingsError } = await supabase
-          .from('employee_ratings')
-          .select('*')
-          .eq('user_id', profile.user_id)
-          .order('created_at', { ascending: false });
+        // Check if user is admin or management - they can see all data
+        const canSeeAllData = ['admin', 'management'].includes(profile.role || '');
         
-        if (ratingsError) {
-          console.error('❌ Error fetching user ratings:', ratingsError);
+        if (canSeeAllData) {
+          // Fetch ALL ratings for admins and management
+          console.log('🔑 Admin/Management user - fetching all employee ratings');
+          
+          const { data: ratingsData, error: ratingsError } = await fetchAllRows(
+            supabase
+              .from('employee_ratings')
+              .select('*')
+              .order('created_at', { ascending: false })
+          );
+          
+          if (ratingsError) {
+            console.error('❌ Error fetching all ratings:', ratingsError);
+          } else {
+            allRatingsData = ratingsData || [];
+            console.log('✅ Total ratings fetched for admin/management:', allRatingsData.length);
+          }
         } else {
-          allRatingsData = ratingsData || [];
-          console.log('📊 User ratings fetched:', allRatingsData.length);
+          // Fetch only current user's ratings for employees and tech leads
+          console.log('👤 Regular user - fetching own ratings only');
+          const { data: ratingsData, error: ratingsError } = await supabase
+            .from('employee_ratings')
+            .select('*')
+            .eq('user_id', profile.user_id)
+            .order('created_at', { ascending: false });
+          
+          if (ratingsError) {
+            console.error('❌ Error fetching user ratings:', ratingsError);
+          } else {
+            allRatingsData = ratingsData || [];
+            console.log('📊 User ratings fetched:', allRatingsData.length);
+          }
         }
         
         console.log('📊 Raw ratings result:', { count: allRatingsData.length });
