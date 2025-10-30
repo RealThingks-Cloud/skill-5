@@ -126,9 +126,9 @@ const Approvals = () => {
                         <div className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors cursor-pointer group">
                           <div className="grid grid-cols-5 gap-4 items-center flex-1">
                             <div className="font-medium text-sm">{employee.employeeName}</div>
-                            <Badge variant="secondary" className="bg-slate-500 text-white text-xs whitespace-nowrap justify-self-center">
+                            <div className="text-sm text-muted-foreground justify-self-center">
                               {employee.pendingCount} Rating{employee.pendingCount > 1 ? "s" : ""}
-                            </Badge>
+                            </div>
                             <div className="text-sm text-muted-foreground">{employee.email}</div>
                             <div className="text-xs text-muted-foreground whitespace-nowrap">
                               Submitted: {employee.submitDate}
