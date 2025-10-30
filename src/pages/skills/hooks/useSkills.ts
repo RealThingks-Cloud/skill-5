@@ -43,44 +43,24 @@ export const useSkills = () => {
         .select('*')
         .order('name');
 
-      // Fetch employee ratings - ALL for admins, current user only for employees
+      // Fetch employee ratings - ONLY current user's ratings for Skills Management page
+      // This page is for personal skill management, not for viewing all employees
       let userSkillsData: any[] = [];
       if (profile.user_id) {
-        console.log('📊 Fetching employee ratings...');
-        
-        // Determine if we should fetch all ratings or just current user's
-        const isManagerOrAbove = ['admin', 'management', 'tech_lead'].includes(profile.role || '');
+        console.log('📊 Fetching employee ratings for user:', profile.user_id);
         
         let allRatingsData: any[] = [];
         
-        if (isManagerOrAbove) {
-          // Fetch ALL ratings using pagination helper for admins/management
-          console.log('🔑 Admin user detected - fetching all employee ratings');
-          
-          const { data: ratingsData, error: ratingsError } = await fetchAllRows(
-            supabase
-              .from('employee_ratings')
-              .select('*')
-              .order('created_at', { ascending: false })
-          );
-          
-          if (ratingsError) {
-            console.error('❌ Error fetching ratings:', ratingsError);
-          } else {
-            allRatingsData = ratingsData || [];
-            console.log('✅ Total ratings fetched for admin:', allRatingsData.length);
-          }
+        // ALWAYS fetch only current user's ratings - this is personal skills management
+        const { data: ratingsData, error: ratingsError } = await supabase
+          .from('employee_ratings')
+          .select('*')
+          .eq('user_id', profile.user_id)
+          .order('created_at', { ascending: false });
+        
+        if (ratingsError) {
+          console.error('❌ Error fetching user ratings:', ratingsError);
         } else {
-          // Fetch only current user's ratings
-          const { data: ratingsData, error: ratingsError } = await supabase
-            .from('employee_ratings')
-            .select('*')
-            .eq('user_id', profile.user_id);
-          
-          if (ratingsError) {
-            console.error('❌ Error fetching user ratings:', ratingsError);
-          }
-          
           allRatingsData = ratingsData || [];
           console.log('📊 User ratings fetched:', allRatingsData.length);
         }
