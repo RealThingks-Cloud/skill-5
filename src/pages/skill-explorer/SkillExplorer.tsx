@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Search, Download } from "lucide-react";
 import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { CategorySelectionModal } from "./components/CategorySelectionModal";
 import { SkillSelectionModal } from "./components/SkillSelectionModal";
 import { SubskillSelectionModal } from "./components/SubskillSelectionModal";
@@ -48,6 +49,7 @@ export default function SkillExplorer() {
   // UI states
   const [activeTab, setActiveTab] = useState<"skills" | "employees">("skills");
   const [searchTerm, setSearchTerm] = useState("");
+  const [employeeSearchTerm, setEmployeeSearchTerm] = useState("");
   const [sortField, setSortField] = useState<SortField>("matching_count");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [selectedEngineers, setSelectedEngineers] = useState<string[]>([]);
@@ -306,128 +308,211 @@ export default function SkillExplorer() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <div className="flex-shrink-0 p-8 pb-4">
-        <SkillExplorerHeader
-          onExport={handleExport}
-          onAddToProject={handleAddToProject}
-          selectedCount={selectedEngineers.length}
-        />
-      </div>
-
-      <div className="flex-1 overflow-hidden px-8">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "skills" | "employees")} className="h-full flex flex-col">
-          <TabsList className="mb-4 flex-shrink-0">
-            <TabsTrigger value="skills">Skill Explorer</TabsTrigger>
-            <TabsTrigger value="employees">Employee Explorer</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="skills" className="flex-1 flex flex-col space-y-4 overflow-hidden mt-0">
-            {/* Search Bar and Add Skill Button */}
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <div className="w-full max-w-lg">
-                <EnhancedSkillSearch
-                  categories={allCategories}
-                  skills={allSkills}
-                  subskills={allSubskills}
-                  onSubskillSelect={handleSearchSubskillSelect}
-                  selectedSubskillIds={pendingSelections.map((s) => s.subskill_id)}
-                  placeholder="Search skills & subskills..."
-                />
-              </div>
-              <Button
-                onClick={() => setCategoryModalOpen(true)}
-                size="default"
-                className="gap-2 shrink-0 transition-all hover:scale-105"
-              >
+      {activeTab === "skills" && (
+        <>
+          <div className="flex-shrink-0 flex items-center justify-between h-16 px-6 border-b border-sidebar-border">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">Skill Explorer</h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
+                <Download className="h-4 w-4" />
+                Export
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleAddToProject} className="gap-2">
                 <Plus className="h-4 w-4" />
-                Add Skill
+                Add to Project
+                {selectedEngineers.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                    {selectedEngineers.length}
+                  </Badge>
+                )}
               </Button>
             </div>
+          </div>
 
-            {/* Main Table Container - Full Height */}
-            <div className="flex-1 bg-card border rounded-lg overflow-hidden shadow-md flex flex-col">
-              {/* Toolbar */}
-              <div className="flex items-center justify-between px-6 h-16 border-b bg-muted/30 flex-shrink-0">
-                <h2 className="text-base font-semibold">Selected Skills ({pendingSelections.length})</h2>
-                <div className="flex gap-2">
+          <div className="flex-1 overflow-hidden px-6 py-4">
+            <div className="h-full flex flex-col">
+              {/* Compact header with tabs, search, and button */}
+              <div className="flex items-center gap-4 mb-4 flex-shrink-0">
+                <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+                  <button
+                    onClick={() => setActiveTab("skills")}
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-background text-foreground shadow-sm"
+                  >
+                    Skill Explorer
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("employees")}
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    Employee Explorer
+                  </button>
+                </div>
+
+                <div className="flex-1 max-w-[360px]">
+                  <EnhancedSkillSearch
+                    categories={allCategories}
+                    skills={allSkills}
+                    subskills={allSubskills}
+                    onSubskillSelect={handleSearchSubskillSelect}
+                    selectedSubskillIds={pendingSelections.map((s) => s.subskill_id)}
+                    placeholder="Search skills & subskills..."
+                  />
+                </div>
+
+                <Button
+                  onClick={() => setCategoryModalOpen(true)}
+                  size="default"
+                  className="gap-2 shrink-0 transition-all hover:scale-105"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Skill
+                </Button>
+              </div>
+
+              <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+
+                {/* Main Table Container - Full Height */}
+                <div className="flex-1 bg-card border rounded-lg overflow-hidden shadow-md flex flex-col">
+                  {/* Toolbar */}
+                  <div className="flex items-center justify-between px-6 h-16 border-b bg-muted/30 flex-shrink-0">
+                    <h2 className="text-base font-semibold">Selected Skills ({pendingSelections.length})</h2>
+                    <div className="flex gap-2">
+                      {pendingSelections.length > 0 && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setPendingSelections([])}
+                            disabled={submitting}
+                            className="h-9 px-3 text-sm transition-all hover:scale-105"
+                          >
+                            Clear All
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setLoadPresetOpen(true)}
+                            className="h-9 px-3 text-sm transition-all hover:scale-105"
+                          >
+                            Load
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleSaveAll}
+                            disabled={submitting}
+                            className="h-9 px-3 text-sm transition-all hover:scale-105"
+                          >
+                            Save All
+                          </Button>
+                        </>
+                      )}
+                      {pendingSelections.length === 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setLoadPresetOpen(true)}
+                          className="h-9 px-3 text-sm transition-all hover:scale-105"
+                        >
+                          Load
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Selected Skills Pills */}
                   {pendingSelections.length > 0 && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setPendingSelections([])}
-                        disabled={submitting}
-                        className="h-9 px-3 text-sm transition-all hover:scale-105"
-                      >
-                        Clear All
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setLoadPresetOpen(true)}
-                        className="h-9 px-3 text-sm transition-all hover:scale-105"
-                      >
-                        Load
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={handleSaveAll}
-                        disabled={submitting}
-                        className="h-9 px-3 text-sm transition-all hover:scale-105"
-                      >
-                        Save All
-                      </Button>
-                    </>
+                    <div className="flex-shrink-0">
+                      <SelectedSkillsPills
+                        selections={pendingSelections}
+                        onRemove={handleRemoveSelection}
+                        onUpdateRating={handleUpdateRating}
+                      />
+                    </div>
                   )}
-                  {pendingSelections.length === 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setLoadPresetOpen(true)}
-                      className="h-9 px-3 text-sm transition-all hover:scale-105"
-                    >
-                      Load
-                    </Button>
-                  )}
+
+                  {/* Results Table - Scrollable */}
+                  <div className="flex-1 overflow-auto">
+                    <SkillExplorerTable
+                      loading={loading}
+                      results={filteredAndSortedResults}
+                      selections={pendingSelections}
+                      sortField={sortField}
+                      onSort={handleSort}
+                      selectedEngineers={selectedEngineers}
+                      onToggleEngineer={handleToggleEngineer}
+                      onToggleAll={handleToggleAllEngineers}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {activeTab === "employees" && (
+        <>
+          <div className="flex-shrink-0 flex items-center justify-between h-16 px-6 border-b border-sidebar-border">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">Employee Explorer</h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
+                <Download className="h-4 w-4" />
+                Export
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-hidden px-6 py-4">
+            <div className="h-full flex flex-col">
+              {/* Compact header with tabs and search */}
+              <div className="flex items-center gap-4 mb-4 flex-shrink-0">
+                <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+                  <button
+                    onClick={() => setActiveTab("skills")}
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    Skill Explorer
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("employees")}
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-background text-foreground shadow-sm"
+                  >
+                    Employee Explorer
+                  </button>
+                </div>
+
+                <div className="flex-1 max-w-[360px]">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Search employees..."
+                      value={employeeSearchTerm}
+                      onChange={(e) => setEmployeeSearchTerm(e.target.value)}
+                      className="w-full h-10 pl-9 pr-4 rounded-md border border-input bg-background text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Selected Skills Pills */}
-              {pendingSelections.length > 0 && (
-                <div className="flex-shrink-0">
-                  <SelectedSkillsPills
-                    selections={pendingSelections}
-                    onRemove={handleRemoveSelection}
-                    onUpdateRating={handleUpdateRating}
-                  />
-                </div>
-              )}
-
-              {/* Results Table - Scrollable */}
               <div className="flex-1 overflow-auto">
-                <SkillExplorerTable
-                  loading={loading}
-                  results={filteredAndSortedResults}
-                  selections={pendingSelections}
-                  sortField={sortField}
-                  onSort={handleSort}
-                  selectedEngineers={selectedEngineers}
-                  onToggleEngineer={handleToggleEngineer}
-                  onToggleAll={handleToggleAllEngineers}
+                <EmployeeExplorerView 
+                  employees={employees.filter((emp) =>
+                    employeeSearchTerm
+                      ? emp.full_name.toLowerCase().includes(employeeSearchTerm.toLowerCase())
+                      : true
+                  )} 
+                  loading={employeesLoading} 
                 />
               </div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="employees" className="flex-1 overflow-hidden mt-0">
-            <div className="h-full bg-card border rounded-lg overflow-hidden shadow-md">
-              <div className="p-6 h-full overflow-auto">
-                <EmployeeExplorerView employees={employees} loading={employeesLoading} />
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+          </div>
+        </>
+      )}
 
       {/* Modals */}
       <CategorySelectionModal

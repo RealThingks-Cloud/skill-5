@@ -117,72 +117,74 @@ const Admin = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-200 font-sans">
-          Administration
-        </h1>
-        <p className="text-muted-foreground font-sans">
-          Manage users and system configuration
-        </p>
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0 flex items-center justify-between h-16 px-6 border-b border-sidebar-border">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Administration</h1>
+        </div>
       </div>
 
-      {/* User Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        {userStats.map((stat, index) => (
-          <Card key={index} className="border-slate-200 dark:border-slate-700">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium font-sans text-slate-700 dark:text-slate-300">
-                {stat.title}
-              </CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold font-sans text-slate-800 dark:text-slate-200">
-                {stat.value}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <div className="flex-1 overflow-auto p-6">
+        <div className="space-y-6">
 
-      {/* Quick Actions */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold font-sans text-slate-800 dark:text-slate-200">
-          Quick Actions
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          {adminSections.map(section => (
-            <Card 
-              key={section.id} 
-              className="cursor-pointer hover:shadow-md transition-shadow border-slate-200 dark:border-slate-700"
-            >
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-md bg-slate-100 dark:bg-slate-800">
-                    <section.icon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base font-sans font-semibold text-slate-800 dark:text-slate-200">
-                      {section.title}
-                    </CardTitle>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 font-sans mt-1">
-                      {section.description}
-                    </p>
-                  </div>
-                </div>
+        {/* User Stats */}
+        <div className="grid gap-4 md:grid-cols-3">
+          {userStats.map((stat, index) => (
+            <Card key={index} className="border-slate-200 dark:border-slate-700">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium font-sans text-slate-700 dark:text-slate-300">
+                  {stat.title}
+                </CardTitle>
+                <stat.icon className={`h-4 w-4 ${stat.color}`} />
               </CardHeader>
-              <CardContent className="pt-0">
-                <Button 
-                  onClick={() => setActiveTab(section.id)} 
-                  size="sm" 
-                  className="w-full font-sans"
-                >
-                  Open {section.title}
-                </Button>
+              <CardContent>
+                <div className="text-2xl font-bold font-sans text-slate-800 dark:text-slate-200">
+                  {stat.value}
+                </div>
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold font-sans text-slate-800 dark:text-slate-200">
+            Quick Actions
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {adminSections.map(section => (
+              <Card 
+                key={section.id} 
+                className="cursor-pointer hover:shadow-md transition-shadow border-slate-200 dark:border-slate-700"
+              >
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-md bg-slate-100 dark:bg-slate-800">
+                      <section.icon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base font-sans font-semibold text-slate-800 dark:text-slate-200">
+                        {section.title}
+                      </CardTitle>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 font-sans mt-1">
+                        {section.description}
+                      </p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <Button 
+                    onClick={() => setActiveTab(section.id)} 
+                    size="sm" 
+                    className="w-full font-sans"
+                  >
+                    Open {section.title}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
         </div>
       </div>
     </div>

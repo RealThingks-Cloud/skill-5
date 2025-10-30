@@ -98,17 +98,20 @@ const Projects = () => {
   );
 
   return (
-    <div className="h-full flex flex-col p-6">
-      <div className="flex items-center justify-between flex-shrink-0 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
-          <p className="text-muted-foreground">Manage projects and track skill requirements</p>
+    <div className="h-full flex flex-col">
+      <div className="flex-shrink-0 flex items-center justify-between h-16 px-6 border-b border-sidebar-border">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Projects</h1>
         </div>
-        <Button onClick={() => setFormDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Project
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => setFormDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Project
+          </Button>
+        </div>
       </div>
+
+      <div className="flex-1 overflow-auto p-6">
 
       {/* Tabs */}
       <div className="flex-1 overflow-hidden">
@@ -174,13 +177,14 @@ const Projects = () => {
         onSuccess={refreshProjects}
       />
 
-      <ProjectDetailDialog
-        projectId={selectedProjectId}
-        open={detailDialogOpen}
-        onOpenChange={setDetailDialogOpen}
-        onSuccess={refreshProjects}
-        userRole={profile?.role || ''}
-      />
+        <ProjectDetailDialog
+          projectId={selectedProjectId}
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+          onSuccess={refreshProjects}
+          userRole={profile?.role || ''}
+        />
+      </div>
     </div>
   );
 };

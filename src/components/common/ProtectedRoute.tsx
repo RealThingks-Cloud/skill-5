@@ -31,8 +31,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (authLoading || isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <LoadingSpinner />
+      <div className="flex items-center justify-center h-screen bg-background">
+        <LoadingSpinner showLogo />
       </div>
     );
   }

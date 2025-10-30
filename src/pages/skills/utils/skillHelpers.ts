@@ -165,3 +165,58 @@ export const calculateCategoryProgress = (
     maxPossiblePoints
   };
 };
+
+// Admin view: Aggregate stats across all users for a category
+// IMPORTANT: Only count approved ratings for High/Medium/Low, and only submitted (pending) for Pending
+export const calculateAdminCategoryStats = (
+  categoryId: string,
+  skills: any[],
+  subskills: any[],
+  allEmployeeRatings: any[]
+) => {
+  const categorySkills = skills.filter(skill => skill.category_id === categoryId);
+  
+  let ratingCounts = { high: 0, medium: 0, low: 0 };
+  let pendingCount = 0;
+  
+  categorySkills.forEach(skill => {
+    const skillSubskills = subskills.filter(subskill => subskill.skill_id === skill.id);
+    
+    if (skillSubskills.length > 0) {
+      // Skill has subskills - count only approved subskill ratings
+      skillSubskills.forEach(subskill => {
+        const approvedRatings = allEmployeeRatings.filter(
+          r => r.subskill_id === subskill.id && r.status === 'approved'
+        );
+        approvedRatings.forEach(rating => {
+          ratingCounts[rating.rating as 'high' | 'medium' | 'low']++;
+        });
+        
+        // Count only submitted (pending approval) ratings
+        const pendingRatings = allEmployeeRatings.filter(
+          r => r.subskill_id === subskill.id && r.status === 'submitted'
+        );
+        pendingCount += pendingRatings.length;
+      });
+    } else {
+      // Skill has no subskills - count only approved skill ratings
+      const approvedRatings = allEmployeeRatings.filter(
+        r => r.skill_id === skill.id && !r.subskill_id && r.status === 'approved'
+      );
+      approvedRatings.forEach(rating => {
+        ratingCounts[rating.rating as 'high' | 'medium' | 'low']++;
+      });
+      
+      // Count only submitted (pending approval) ratings
+      const pendingRatings = allEmployeeRatings.filter(
+        r => r.skill_id === skill.id && !r.subskill_id && r.status === 'submitted'
+      );
+      pendingCount += pendingRatings.length;
+    }
+  });
+  
+  return {
+    ratingCounts,
+    pendingCount
+  };
+};

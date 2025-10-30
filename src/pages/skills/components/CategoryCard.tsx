@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,11 +7,13 @@ import { AddCategoryModal } from "./admin/AddCategoryModal";
 import { ApprovedRatingsModal } from "./ApprovedRatingsModal";
 import { PendingRatingsModal } from "./PendingRatingsModal";
 import { RejectedRatingsModal } from "./RejectedRatingsModal";
+import { AdminRatingsDrilldownModal } from "./AdminRatingsDrilldownModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SkillsService } from "../services/skills.service";
-import { calculateCategoryProgress } from "../utils/skillHelpers";
+import { calculateCategoryProgress, calculateAdminCategoryStats } from "../utils/skillHelpers";
 import type { SkillCategory, EmployeeRating, Skill } from "@/types/database";
+import { fetchAllRows } from "@/utils/supabasePagination";
 interface CategoryCardProps {
   category: SkillCategory;
   skillCount: number;
@@ -24,6 +26,7 @@ interface CategoryCardProps {
   subskills?: any[];
   showHideButton?: boolean;
   onHide?: (categoryId: string, categoryName: string) => void;
+  allEmployeeRatings?: any[]; // Pre-fetched ratings from parent for admins
 }
 export const CategoryCard = ({
   category,
@@ -36,52 +39,79 @@ export const CategoryCard = ({
   skills = [],
   subskills = [],
   showHideButton = false,
-  onHide
+  onHide,
+  allEmployeeRatings = [] // Receive pre-fetched data from parent
 }: CategoryCardProps) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showApprovedModal, setShowApprovedModal] = useState(false);
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [showRejectedModal, setShowRejectedModal] = useState(false);
   const [selectedRatingFilter, setSelectedRatingFilter] = useState<'high' | 'medium' | 'low' | undefined>();
+  const [showDrilldownModal, setShowDrilldownModal] = useState(false);
+  const [drilldownType, setDrilldownType] = useState<'high' | 'medium' | 'low' | 'pending'>('high');
+  const [drilldownRecords, setDrilldownRecords] = useState<any[]>([]);
   const {
     toast
   } = useToast();
 
-  // Calculate user-specific statistics using corrected progress rules
-  const progressData = React.useMemo(() => {
-    return calculateCategoryProgress(category.id, skills, subskills, userSkills);
-  }, [category.id, skills, subskills, userSkills]);
-  const {
-    totalItems,
-    ratedItems,
-    progressPercentage,
-    ratingCounts,
-    approvedCount,
-    pendingCount,
-    rejectedCount,
-    level,
-    totalPoints,
-    maxPossiblePoints
-  } = progressData;
+  // Filter ratings for this category (for admin view)
+  const categoryEmployeeRatings = React.useMemo(() => {
+    if (!isManagerOrAbove || allEmployeeRatings.length === 0) return [];
+    
+    // Get skill IDs for this category
+    const categorySkillIds = skills.filter(s => s.category_id === category.id).map(s => s.id);
+    
+    // Filter ratings for this category's skills
+    return allEmployeeRatings.filter(rating => 
+      categorySkillIds.includes(rating.skill_id)
+    );
+  }, [isManagerOrAbove, category.id, skills, allEmployeeRatings]);
 
-  // Determine status based on level from calculateCategoryProgress
+  // Calculate statistics based on role
+  const statsData = React.useMemo(() => {
+    if (isManagerOrAbove && categoryEmployeeRatings.length > 0) {
+      return calculateAdminCategoryStats(category.id, skills, subskills, categoryEmployeeRatings);
+    } else {
+      const progress = calculateCategoryProgress(category.id, skills, subskills, userSkills);
+      return {
+        ratingCounts: progress.ratingCounts,
+        pendingCount: progress.pendingCount
+      };
+    }
+  }, [isManagerOrAbove, category.id, skills, subskills, userSkills, categoryEmployeeRatings]);
+
+  const { ratingCounts, pendingCount } = statsData;
+
+  // For user view, still calculate full progress data
+  const progressData = React.useMemo(() => {
+    if (!isManagerOrAbove) {
+      return calculateCategoryProgress(category.id, skills, subskills, userSkills);
+    }
+    return null;
+  }, [isManagerOrAbove, category.id, skills, subskills, userSkills]);
+
+  // Determine status based on level from calculateCategoryProgress (only for user view)
   const statusInfo = React.useMemo(() => {
-    if (level === 'expert') return {
-      status: 'Expert',
-      color: 'bg-green-500 text-white',
-      bgTint: 'bg-green-50 border-green-200'
-    };
-    if (level === 'moderate') return {
-      status: 'Moderate',
-      color: 'bg-yellow-500 text-white',
-      bgTint: 'bg-yellow-50 border-yellow-200'
-    };
-    return {
-      status: 'Beginner',
-      color: 'bg-red-500 text-white',
-      bgTint: 'bg-red-50 border-red-200'
-    };
-  }, [level]);
+    if (!isManagerOrAbove && progressData) {
+      const { level } = progressData;
+      if (level === 'expert') return {
+        status: 'Expert',
+        color: 'bg-green-500 text-white',
+        bgTint: 'bg-green-50 border-green-200'
+      };
+      if (level === 'moderate') return {
+        status: 'Moderate',
+        color: 'bg-yellow-500 text-white',
+        bgTint: 'bg-yellow-50 border-yellow-200'
+      };
+      return {
+        status: 'Beginner',
+        color: 'bg-red-500 text-white',
+        bgTint: 'bg-red-50 border-red-200'
+      };
+    }
+    return null;
+  }, [isManagerOrAbove, progressData]);
   const handleEdit = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -123,8 +153,36 @@ export const CategoryCard = ({
   const handleRatingClick = (rating: 'high' | 'medium' | 'low', e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setSelectedRatingFilter(rating);
-    setShowApprovedModal(true);
+    
+    if (isManagerOrAbove) {
+      // Admin drilldown
+      const categorySkillIds = skills
+        .filter(s => s.category_id === category.id)
+        .map(s => s.id);
+      
+      const records = allEmployeeRatings
+        .filter(r => {
+          const skillMatch = categorySkillIds.includes(r.skill_id);
+          const ratingMatch = r.rating === rating && r.status === 'approved';
+          return skillMatch && ratingMatch;
+        })
+        .map(r => ({
+          ...r,
+          employee_name: r.profiles?.full_name,
+          skill_name: r.skills?.name,
+          subskill_name: r.subskills?.name,
+          category_name: category.name,
+          approver_name: r.approver?.full_name
+        }));
+      
+      setDrilldownRecords(records);
+      setDrilldownType(rating);
+      setShowDrilldownModal(true);
+    } else {
+      // Employee view
+      setSelectedRatingFilter(rating);
+      setShowApprovedModal(true);
+    }
   };
   const handleApprovedClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -140,7 +198,35 @@ export const CategoryCard = ({
   const handlePendingClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setShowPendingModal(true);
+    
+    if (isManagerOrAbove) {
+      // Admin drilldown
+      const categorySkillIds = skills
+        .filter(s => s.category_id === category.id)
+        .map(s => s.id);
+      
+      const records = allEmployeeRatings
+        .filter(r => {
+          const skillMatch = categorySkillIds.includes(r.skill_id);
+          const statusMatch = r.status === 'submitted';
+          return skillMatch && statusMatch;
+        })
+        .map(r => ({
+          ...r,
+          employee_name: r.profiles?.full_name,
+          skill_name: r.skills?.name,
+          subskill_name: r.subskills?.name,
+          category_name: category.name,
+          approver_name: r.approver?.full_name
+        }));
+      
+      setDrilldownRecords(records);
+      setDrilldownType('pending');
+      setShowDrilldownModal(true);
+    } else {
+      // Employee view
+      setShowPendingModal(true);
+    }
   };
   const handleUpdateClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -281,5 +367,13 @@ export const CategoryCard = ({
       <PendingRatingsModal open={showPendingModal} onOpenChange={setShowPendingModal} categoryName={category.name} ratings={userSkills} skills={skills.filter(skill => skill.category_id === category.id)} subskills={subskills.filter(subskill => skills.some(skill => skill.id === subskill.skill_id && skill.category_id === category.id))} />
 
       <RejectedRatingsModal open={showRejectedModal} onOpenChange={setShowRejectedModal} categoryName={category.name} ratings={userSkills} skills={skills.filter(skill => skill.category_id === category.id)} subskills={subskills.filter(subskill => skills.some(skill => skill.id === subskill.skill_id && skill.category_id === category.id))} />
+
+      <AdminRatingsDrilldownModal 
+        open={showDrilldownModal} 
+        onOpenChange={setShowDrilldownModal}
+        categoryName={category.name}
+        ratingType={drilldownType}
+        records={drilldownRecords}
+      />
     </>;
 };
