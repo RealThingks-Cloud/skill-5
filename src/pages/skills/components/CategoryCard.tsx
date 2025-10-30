@@ -349,8 +349,8 @@ export const CategoryCard = ({
 
               <button onClick={e => {
                 handleUpdateClick(e);
-              }} className="justify-self-end self-end w-[60%] h-[60%] flex items-center justify-center p-2.5 rounded-xl bg-slate-700 dark:bg-slate-800 border-0 hover:bg-slate-600 dark:hover:bg-slate-700 hover:shadow-lg transition-all duration-200 cursor-pointer" type="button">
-                <div className="text-sm font-semibold text-white">Update</div>
+              }} className="justify-self-end self-end w-[60%] h-[60%] flex items-center justify-center p-2.5 rounded-xl bg-primary border-0 hover:bg-primary/90 hover:shadow-lg transition-all duration-200 cursor-pointer" type="button">
+                <div className="text-sm font-semibold text-primary-foreground">Update</div>
               </button>
             </div>
           </CardContent>
