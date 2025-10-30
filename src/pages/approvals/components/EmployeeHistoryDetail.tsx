@@ -39,9 +39,9 @@ export const EmployeeHistoryDetail = ({ employee, isExpanded, onToggle }: Employ
           <div className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors cursor-pointer group">
             <div className="grid grid-cols-5 gap-4 items-center flex-1">
               <div className="font-medium text-sm">{employee.employeeName}</div>
-              <div className="text-sm text-muted-foreground justify-self-center">
+              <Badge variant="secondary" className="bg-slate-500 text-white text-xs whitespace-nowrap justify-self-center">
                 {employee.totalCount} Rating{employee.totalCount > 1 ? "s" : ""}
-              </div>
+              </Badge>
               <div className="text-sm text-muted-foreground">{employee.employeeEmail}</div>
               <div className="text-xs text-muted-foreground">
                 {employee.ratings[0]?.approved_at 
