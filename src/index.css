@@ -29,9 +29,9 @@
     --popover-foreground: 230 50% 25%;
 
     /* Primary Professional Blue */
-    --primary: 216 34% 17%; /* Deep navy blue */
-    --primary-light: 216 34% 27%; /* Lighter navy */
-    --primary-dark: 216 34% 12%; /* Darker navy */
+    --primary: 216 50% 40%; /* Modern blue - lighter */
+    --primary-light: 216 50% 50%; /* Lighter navy */
+    --primary-dark: 216 50% 30%; /* Darker navy */
     --primary-foreground: 0 0% 100%;
 
     /* Secondary Neutral */
@@ -103,12 +103,12 @@
     /* Sidebar Colors */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 230 50% 25%;
-    --sidebar-primary: 216 34% 17%;
+    --sidebar-primary: 216 50% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 13% 95%;
     --sidebar-accent-foreground: 230 50% 25%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 216 34% 17%;
+    --sidebar-ring: 216 50% 40%;
   }
 
   .dark {
