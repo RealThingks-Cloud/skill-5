@@ -68,7 +68,7 @@ const Approvals = () => {
             <TabsTrigger value="pending">Pending Approvals</TabsTrigger>
             <TabsTrigger value="history">Approval History</TabsTrigger>
           </TabsList>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
             <Users className="h-4 w-4" />
             <span className="font-medium">
               {activeTab === "pending" ? groupedApprovals.length : groupedHistory.length}
@@ -79,9 +79,9 @@ const Approvals = () => {
             <span className="font-medium">
               {activeTab === "pending" 
                 ? pendingApprovals.length 
-                : groupedHistory.reduce((total, group) => total + group.totalCount, 0)}
+                : groupedHistory.reduce((total, group) => total + group.totalCount, 0)}{" "}
+              {activeTab === "pending" ? "ratings pending" : "ratings reviewed"}
             </span>
-            <span>{activeTab === "pending" ? "ratings pending" : "ratings reviewed"}</span>
           </div>
         </div>
 
