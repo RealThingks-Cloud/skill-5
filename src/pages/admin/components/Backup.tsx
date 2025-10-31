@@ -501,7 +501,7 @@ export default function Backup({
           <CardContent className="space-y-4">
             {isExporting && <div className="p-4 bg-muted rounded-lg space-y-2">
                 <div className="flex items-center gap-2">
-                  <LoadingSpinner size="sm" />
+                  <LoadingSpinner showText={false} />
                   <span className="text-sm font-medium">Exporting data...</span>
                 </div>
                 {exportProgress && <p className="text-sm text-muted-foreground">{exportProgress}</p>}
@@ -530,7 +530,7 @@ export default function Backup({
           <CardContent className="space-y-4">
             {isImporting && <div className="p-4 bg-muted rounded-lg space-y-2">
                 <div className="flex items-center gap-2">
-                  <LoadingSpinner size="sm" />
+                  <LoadingSpinner showText={false} />
                   <span className="text-sm font-medium">Restoring database...</span>
                 </div>
                 {importProgress && <p className="text-sm text-muted-foreground">{importProgress}</p>}
@@ -571,7 +571,7 @@ export default function Backup({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loadingHistory ? <div className="flex justify-center p-4">
+          {loadingHistory ? <div className="flex items-center justify-center p-4 min-h-32">
               <LoadingSpinner />
             </div> : backupHistory.length === 0 ? <p className="text-center text-muted-foreground py-4">No backup history yet</p> : <div className="space-y-2">
               {backupHistory.map(backup => <div key={backup.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">

@@ -25,7 +25,7 @@ export function Layout({
   // Show loading spinner while checking auth
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-background">
-        <LoadingSpinner showLogo />
+        <LoadingSpinner />
       </div>;
   }
 
@@ -37,7 +37,7 @@ export function Layout({
   // If user exists but no profile loaded, show loading
   if (user && profile === null && !loading) {
     return <div className="min-h-screen flex items-center justify-center bg-background">
-        <LoadingSpinner showLogo />
+        <LoadingSpinner />
       </div>;
   }
   const getRoleColor = (role: string) => {
