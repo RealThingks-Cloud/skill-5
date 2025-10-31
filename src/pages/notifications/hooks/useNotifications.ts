@@ -27,18 +27,49 @@ export const useNotifications = (isAdmin: boolean) => {
     try {
       setLoading(true);
       
-      // Fetch notifications with performer info
-      const { data, error } = await supabase
+      // Fetch notifications
+      const { data: notificationsData, error: notificationsError } = await supabase
         .from("notifications")
-        .select(`
-          *,
-          performer:profiles!notifications_user_id_fkey(full_name, email)
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (notificationsError) throw notificationsError;
+
+      // Fetch performer profiles for notifications that have performed_by
+      const performerIds = Array.from(
+        new Set(
+          notificationsData
+            ?.filter((n) => n.performed_by)
+            .map((n) => n.performed_by) || []
+        )
+      );
+
+      let performerProfiles: Record<string, { full_name: string; email: string }> = {};
       
-      setNotifications(data || []);
+      if (performerIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, email")
+          .in("user_id", performerIds);
+
+        if (!profilesError && profiles) {
+          performerProfiles = profiles.reduce((acc, profile) => {
+            acc[profile.user_id] = {
+              full_name: profile.full_name,
+              email: profile.email,
+            };
+            return acc;
+          }, {} as Record<string, { full_name: string; email: string }>);
+        }
+      }
+
+      // Combine notifications with performer data
+      const notificationsWithPerformers = notificationsData?.map((notif: any) => ({
+        ...notif,
+        performer: notif.performed_by ? performerProfiles[notif.performed_by] : undefined,
+      })) || [];
+      
+      setNotifications(notificationsWithPerformers);
     } catch (error) {
       console.error("Error fetching notifications:", error);
       toast({
