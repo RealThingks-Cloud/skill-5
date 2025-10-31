@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, BookOpen, CheckCircle, Search, Settings, ChevronLeft, User, LogOut, FolderKanban, FileBarChart } from "lucide-react";
+import { LayoutDashboard, BookOpen, CheckCircle, Search, Settings, ChevronLeft, User, LogOut, FolderKanban, FileBarChart, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -155,6 +155,39 @@ export function AppSidebar() {
                 </TooltipProvider>;
           }
           return collapseButton;
+        })()}
+        </div>
+
+        {/* Notifications */}
+        <div>
+          {(() => {
+          const handleNotificationsClick = () => {
+            navigate("/notifications");
+          };
+          const isNotificationsActive = currentPath === "/notifications";
+          const notificationsButton = <button onClick={handleNotificationsClick} className={`flex items-center h-10 w-full rounded-lg transition-colors font-medium ${
+            isNotificationsActive 
+              ? "text-sidebar-primary bg-sidebar-accent" 
+              : "text-sidebar-foreground/70 hover:text-sidebar-primary hover:bg-sidebar-accent/50"
+          }`}>
+                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                  <Bell className="w-5 h-5" />
+                </div>
+                <div className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${collapsed ? "opacity-0 w-0" : "opacity-100 w-auto ml-0"}`}>
+                  <span className="text-sm font-medium">Notifications</span>
+                </div>
+              </button>;
+          if (collapsed) {
+            return <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>{notificationsButton}</TooltipTrigger>
+                    <TooltipContent side="right" className="ml-2">
+                      <p>Notifications</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>;
+          }
+          return notificationsButton;
         })()}
         </div>
 
