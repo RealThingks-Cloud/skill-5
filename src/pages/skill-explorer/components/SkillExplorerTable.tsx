@@ -1,4 +1,4 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowUpDown, Search } from "lucide-react";
@@ -63,7 +63,7 @@ export function SkillExplorerTable({
   return (
     <div className="h-full relative">
       <div className="absolute inset-0 overflow-auto">
-        <Table>
+        <table className="w-full caption-bottom text-sm">
         <TableHeader className="sticky top-0 z-30">
           <TableRow className="border-0">
             <TableHead className="w-12 sticky left-0 top-0 bg-muted z-40 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] border-r border-border/20">
@@ -182,7 +182,7 @@ export function SkillExplorerTable({
             ))
           )}
         </TableBody>
-        </Table>
+        </table>
       </div>
     </div>
   );
