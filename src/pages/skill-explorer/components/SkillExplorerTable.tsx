@@ -66,7 +66,8 @@ export function SkillExplorerTable({
         <table className="w-full caption-bottom text-sm">
         <TableHeader className="sticky top-0 z-30">
           <TableRow className="border-0">
-            <TableHead className="w-12 sticky left-0 top-0 bg-background backdrop-blur-sm z-40 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.2)] border-r border-border/20 before:absolute before:inset-0 before:bg-background before:-z-10">
+            <TableHead className="w-12 sticky left-0 top-0 z-50 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)] border-r border-border/20 isolate">
+              <div className="absolute inset-0 bg-background -z-10" />
               <Checkbox
                 checked={allSelected}
                 onCheckedChange={onToggleAll}
@@ -75,10 +76,11 @@ export function SkillExplorerTable({
               />
             </TableHead>
             <TableHead
-              className="cursor-pointer font-semibold text-base min-w-[200px] sticky left-12 top-0 bg-background backdrop-blur-sm z-40 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.2)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20 before:absolute before:inset-0 before:bg-background before:-z-10"
+              className="cursor-pointer font-semibold text-base min-w-[200px] sticky left-12 top-0 z-50 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20 isolate"
               onClick={() => onSort("name")}
             >
-              <div className="flex items-center gap-2 py-1">
+              <div className="absolute inset-0 bg-background -z-10" />
+              <div className="flex items-center gap-2 py-1 relative z-10">
                 Engineer Name
                 <ArrowUpDown
                   className={`h-4 w-4 transition-opacity ${sortField === "name" ? "opacity-100" : "opacity-50"}`}
@@ -86,10 +88,11 @@ export function SkillExplorerTable({
               </div>
             </TableHead>
             <TableHead
-              className="cursor-pointer font-semibold text-base min-w-[120px] sticky left-[calc(48px+200px)] top-0 bg-background backdrop-blur-sm z-40 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.2)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20 before:absolute before:inset-0 before:bg-background before:-z-10"
+              className="cursor-pointer font-semibold text-base min-w-[120px] sticky left-[calc(48px+200px)] top-0 z-50 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20 isolate"
               onClick={() => onSort("availability")}
             >
-              <div className="flex items-center gap-2 py-1">
+              <div className="absolute inset-0 bg-background -z-10" />
+              <div className="flex items-center gap-2 py-1 relative z-10">
                 Available
                 <ArrowUpDown
                   className={`h-4 w-4 transition-opacity ${sortField === "availability" ? "opacity-100" : "opacity-50"}`}
@@ -138,17 +141,20 @@ export function SkillExplorerTable({
                 key={user.user_id}
                 className="hover:bg-muted/30 transition-all duration-200 animate-fade-in border-b hover:border-primary/20"
               >
-                <TableCell className="sticky left-0 bg-background backdrop-blur-sm z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)] py-4 border-r border-border/20 before:absolute before:inset-0 before:bg-background before:-z-10">
+                <TableCell className="sticky left-0 z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)] py-4 border-r border-border/20 isolate">
+                  <div className="absolute inset-0 bg-background -z-10" />
                   <Checkbox
                     checked={selectedEngineers.includes(user.user_id)}
                     onCheckedChange={() => onToggleEngineer(user.user_id)}
                     aria-label={`Select ${user.full_name}`}
                   />
                 </TableCell>
-                <TableCell className="font-medium text-base sticky left-12 bg-background backdrop-blur-sm z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)] py-4 border-r border-border/20 before:absolute before:inset-0 before:bg-background before:-z-10">
-                  {user.full_name}
+                <TableCell className="font-medium text-base sticky left-12 z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)] py-4 border-r border-border/20 isolate">
+                  <div className="absolute inset-0 bg-background -z-10" />
+                  <span className="relative z-10">{user.full_name}</span>
                 </TableCell>
-                <TableCell className="sticky left-[calc(48px+200px)] bg-background backdrop-blur-sm z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)] py-4 border-r border-border/20 before:absolute before:inset-0 before:bg-background before:-z-10">
+                <TableCell className="sticky left-[calc(48px+200px)] z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)] py-4 border-r border-border/20 isolate">
+                  <div className="absolute inset-0 bg-background -z-10" />
                   <Badge 
                     variant="secondary"
                     className={`font-semibold text-sm ${
