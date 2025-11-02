@@ -63,9 +63,9 @@ export function SkillExplorerTable({
   return (
     <div className="h-full overflow-auto">
       <Table>
-        <TableHeader>
+        <TableHeader className="sticky top-0 z-30">
           <TableRow className="border-0">
-            <TableHead className="w-12 sticky left-0 bg-muted z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] border-r border-border/20">
+            <TableHead className="w-12 sticky left-0 top-0 bg-muted z-40 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] border-r border-border/20">
               <Checkbox
                 checked={allSelected}
                 onCheckedChange={onToggleAll}
@@ -74,7 +74,7 @@ export function SkillExplorerTable({
               />
             </TableHead>
             <TableHead
-              className="cursor-pointer font-semibold text-base min-w-[200px] sticky left-12 bg-muted z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20"
+              className="cursor-pointer font-semibold text-base min-w-[200px] sticky left-12 top-0 bg-muted z-40 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20"
               onClick={() => onSort("name")}
             >
               <div className="flex items-center gap-2 py-1">
@@ -85,7 +85,7 @@ export function SkillExplorerTable({
               </div>
             </TableHead>
             <TableHead
-              className="cursor-pointer font-semibold text-base min-w-[120px] sticky left-[calc(48px+200px)] bg-muted z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20"
+              className="cursor-pointer font-semibold text-base min-w-[120px] sticky left-[calc(48px+200px)] top-0 bg-muted z-40 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20"
               onClick={() => onSort("availability")}
             >
               <div className="flex items-center gap-2 py-1">
@@ -98,7 +98,7 @@ export function SkillExplorerTable({
             {selections.map((selection) => (
               <TableHead
                 key={selection.id}
-                className="font-semibold text-sm min-w-[120px] text-center cursor-pointer bg-muted hover:bg-muted/80 transition-all duration-200 border-r border-border/20"
+                className="font-semibold text-sm min-w-[120px] text-center cursor-pointer sticky top-0 bg-muted hover:bg-muted/80 transition-all duration-200 border-r border-border/20 z-30"
                 onClick={() => onSort(selection.subskill)}
               >
                 <div className="flex flex-col items-center gap-1 py-1">
