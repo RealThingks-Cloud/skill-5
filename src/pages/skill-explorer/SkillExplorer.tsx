@@ -386,7 +386,11 @@ export default function SkillExplorer() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setPendingSelections([])}
+                            onClick={() => {
+                              setPendingSelections([]);
+                              setSortField("matching_count");
+                              setSortDirection("desc");
+                            }}
                             disabled={submitting}
                             className="h-9 px-3 text-sm transition-all hover:scale-105"
                           >
