@@ -61,8 +61,9 @@ export function SkillExplorerTable({
   }
 
   return (
-    <div className="h-full overflow-auto">
-      <Table>
+    <div className="h-full relative">
+      <div className="absolute inset-0 overflow-auto">
+        <Table>
         <TableHeader className="sticky top-0 z-30">
           <TableRow className="border-0">
             <TableHead className="w-12 sticky left-0 top-0 bg-muted z-40 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] border-r border-border/20">
@@ -181,7 +182,8 @@ export function SkillExplorerTable({
             ))
           )}
         </TableBody>
-      </Table>
+        </Table>
+      </div>
     </div>
   );
 }
