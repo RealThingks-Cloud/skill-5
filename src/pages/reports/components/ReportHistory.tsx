@@ -90,7 +90,7 @@ export function ReportHistory({ isOpen, onOpenChange }: ReportHistoryProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-[min(896px,90vw)] w-full max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
@@ -189,7 +189,7 @@ export function ReportHistory({ isOpen, onOpenChange }: ReportHistoryProps) {
 
         {selectedReport && (
           <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
-            <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogContent className="max-w-[min(1152px,90vw)] w-full max-h-[90vh] overflow-hidden flex flex-col">
               <DialogHeader>
                 <DialogTitle>Report Details - {selectedReport.name}</DialogTitle>
               </DialogHeader>

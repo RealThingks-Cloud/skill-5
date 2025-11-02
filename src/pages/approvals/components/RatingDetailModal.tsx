@@ -34,7 +34,7 @@ export const RatingDetailModal = ({
     return status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
   };
   return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-[min(672px,90vw)] w-full max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Rating Details</DialogTitle>
         </DialogHeader>

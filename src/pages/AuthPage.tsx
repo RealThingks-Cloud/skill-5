@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import loginBg from '@/assets/login-bg.jpg';
 export default function AuthPage() {
   const {
     user,
@@ -17,7 +18,11 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   // Debug logging
-  console.log('AuthPage render:', { user: !!user, authLoading, loading });
+  console.log('AuthPage render:', {
+    user: !!user,
+    authLoading,
+    loading
+  });
 
   // Redirect if already authenticated
   if (user && !authLoading) {
@@ -31,37 +36,33 @@ export default function AuthPage() {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const {
+        error: signInError
+      } = await supabase.auth.signInWithPassword({
         email,
         password
       });
-      
       if (signInError) {
         throw signInError;
       }
 
       // Check if user has a profile
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('status')
-        .eq('email', email)
-        .maybeSingle();
-
+      const {
+        data: profile,
+        error: profileError
+      } = await supabase.from('profiles').select('status').eq('email', email).maybeSingle();
       if (profileError) {
         await supabase.auth.signOut();
         throw new Error("Invalid credentials");
       }
-
       if (!profile) {
         await supabase.auth.signOut();
         throw new Error("Invalid credentials");
       }
-
       if (profile.status !== 'active') {
         await supabase.auth.signOut();
         throw new Error("Your account has been disabled. Please contact your administrator for more details.");
       }
-
       toast({
         title: "Welcome back!",
         description: "You have been signed in successfully."
@@ -81,23 +82,29 @@ export default function AuthPage() {
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>;
   }
-
   console.log('Rendering auth form');
-  return <div className="min-h-screen bg-gradient-to-br from-primary/10 via-secondary/5 to-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+  return <div 
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{
+        backgroundImage: `url(${loginBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      {/* Subtle overlay for better readability without blur */}
+      <div className="absolute inset-0 bg-background/60" />
+      
+      <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="bg-primary rounded-lg p-3">
-              <img src="/lovable-uploads/54adcce8-be73-4135-bb3c-fb8fd83846cf.png" alt="Logo" className="h-8 w-8" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Skill Matrix</h1>
+          
+          
           
         </div>
 
         <Card className="shadow-lg border-0 bg-card/80 backdrop-blur">
           <CardHeader className="text-center">
-            <CardTitle>Welcome</CardTitle>
+            <CardTitle>Welcome to Skill Matrix</CardTitle>
             
           </CardHeader>
           <CardContent>

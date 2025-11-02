@@ -137,21 +137,13 @@ export default function ProjectDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-6xl w-[95vw] max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-[min(1440px,90vw)] w-full max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <div className="flex items-center justify-between gap-4">
               <DialogTitle>{project.name}</DialogTitle>
-              <div className="flex items-center gap-2">
-                {canEdit && (
-                  <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit
-                  </Button>
-                )}
-                <Badge variant={project.status === 'active' ? 'default' : project.status === 'awaiting_approval' ? 'secondary' : project.status === 'rejected' ? 'destructive' : 'outline'}>
-                  {project.status.replace('_', ' ').toUpperCase()}
-                </Badge>
-              </div>
+              <Badge variant={project.status === 'active' ? 'default' : project.status === 'awaiting_approval' ? 'secondary' : project.status === 'rejected' ? 'destructive' : 'outline'}>
+                {project.status.replace('_', ' ').toUpperCase()}
+              </Badge>
             </div>
           </DialogHeader>
 
@@ -167,7 +159,7 @@ export default function ProjectDetailDialog({
             <TabsContent value="overview" className="mt-0">
               <ProjectOverviewTab project={project} />
             </TabsContent>
-            <TabsContent value="members" className="mt-0">
+            <TabsContent value="members" className="mt-0 h-full overflow-hidden">
               <ProjectMembersTab project={project} />
             </TabsContent>
             <TabsContent value="skills" className="mt-0">
@@ -179,27 +171,37 @@ export default function ProjectDetailDialog({
           </div>
         </Tabs>
 
-        {canApprove && (
-          <div className="flex-shrink-0 pt-4 border-t space-y-3">
-            {showRejectForm ? (
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label>Rejection Reason</Label>
-                  <Textarea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} placeholder="Explain why..." rows={3} />
+        <div className="flex-shrink-0 pt-4 border-t">
+          {canApprove && (
+            <div className="space-y-3">
+              {showRejectForm ? (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label>Rejection Reason</Label>
+                    <Textarea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} placeholder="Explain why..." rows={3} />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setShowRejectForm(false)}>Cancel</Button>
+                    <Button variant="destructive" onClick={handleReject} disabled={!rejectionReason.trim()}><X className="mr-2 h-4 w-4" />Confirm Rejection</Button>
+                  </div>
                 </div>
+              ) : (
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setShowRejectForm(false)}>Cancel</Button>
-                  <Button variant="destructive" onClick={handleReject} disabled={!rejectionReason.trim()}><X className="mr-2 h-4 w-4" />Confirm Rejection</Button>
+                  <Button onClick={handleApprove}><Check className="mr-2 h-4 w-4" />Approve</Button>
+                  <Button variant="outline" onClick={() => setShowRejectForm(true)}><X className="mr-2 h-4 w-4" />Reject</Button>
                 </div>
-              </div>
-            ) : (
-              <div className="flex gap-2">
-                <Button onClick={handleApprove}><Check className="mr-2 h-4 w-4" />Approve</Button>
-                <Button variant="outline" onClick={() => setShowRejectForm(true)}><X className="mr-2 h-4 w-4" />Reject</Button>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+          {canEdit && (
+            <div className={`flex justify-end ${canApprove ? 'mt-3' : ''}`}>
+              <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(true)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
+            </div>
+          )}
+        </div>
         </DialogContent>
       </Dialog>
 

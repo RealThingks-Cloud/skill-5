@@ -17,35 +17,35 @@ export default function ProjectMembersTab({
     if (available >= 25) return '🟡';
     return '🔴';
   };
-  return <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Team Members ({project.members.length})</h3>
+  return <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between flex-shrink-0 mb-3">
+        <h3 className="font-semibold text-sm">Team Members ({project.members.length})</h3>
       </div>
 
-      <div className="space-y-3">
-        {project.members.map(member => <div key={member.user_id} className="p-4 border rounded-lg">
-            <div className="flex items-start justify-between mb-3">
+      <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+        {project.members.map(member => <div key={member.user_id} className="p-3 border rounded-lg transition-smooth hover:border-primary/50">
+            <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium">{member.full_name}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="font-medium text-sm">{member.full_name}</p>
                   
-                  <span className="text-lg">{getCapacityBadge(member.available_capacity)}</span>
+                  <span className="text-base">{getCapacityBadge(member.available_capacity)}</span>
                 </div>
                 
               </div>
-              <Badge className="text-base font-semibold">
+              <Badge className="text-sm font-semibold">
                 {member.allocation_percentage}% on this project
               </Badge>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Total Allocation</span>
                 <span className={getCapacityColor(member.available_capacity)}>
                   {member.current_total_allocation}% allocated • {member.available_capacity}% available
                 </span>
               </div>
-              <Progress value={member.current_total_allocation} className="h-2" />
+              <Progress value={member.current_total_allocation} className="h-1.5" />
             </div>
           </div>)}
       </div>

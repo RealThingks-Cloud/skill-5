@@ -10,30 +10,17 @@ interface StepTwoProps {
 
 export default function StepTwo({ formData, setFormData }: StepTwoProps) {
   return (
-    <div className="space-y-4">
-      <FormInput
-        id="name"
-        label="Project Name"
-        value={formData.name}
-        onChange={(value) => setFormData({ ...formData, name: value })}
-        placeholder="Enter project name"
-        required
-      />
-
-      <div className="space-y-2">
-        <Label htmlFor="description" className="after:content-['*'] after:ml-0.5 after:text-red-500">
-          Description
-        </Label>
-        <Textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          placeholder="Describe the project goals and scope"
-          rows={4}
+    <div className="space-y-3">
+      <div className="grid grid-cols-[1fr_auto] gap-3 items-start">
+        <FormInput
+          id="name"
+          label="Project Name"
+          value={formData.name}
+          onChange={(value) => setFormData({ ...formData, name: value })}
+          placeholder="Enter project name"
+          required
         />
-      </div>
 
-      <div className="grid grid-cols-2 gap-4">
         <FormInput
           id="start_date"
           label="Start Date"
@@ -41,7 +28,24 @@ export default function StepTwo({ formData, setFormData }: StepTwoProps) {
           value={formData.start_date}
           onChange={(value) => setFormData({ ...formData, start_date: value })}
           required
+          className="w-[180px]"
         />
+      </div>
+
+      <div className="grid grid-cols-[1fr_auto] gap-3 items-start">
+        <div className="space-y-1.5">
+          <Label htmlFor="description" className="after:content-['*'] after:ml-0.5 after:text-red-500">
+            Description
+          </Label>
+          <Textarea
+            id="description"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder="Describe the project goals and scope"
+            rows={3}
+            className="text-sm"
+          />
+        </div>
 
         <FormInput
           id="end_date"
@@ -49,6 +53,7 @@ export default function StepTwo({ formData, setFormData }: StepTwoProps) {
           type="date"
           value={formData.end_date || ''}
           onChange={(value) => setFormData({ ...formData, end_date: value })}
+          className="w-[180px]"
         />
       </div>
     </div>

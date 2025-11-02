@@ -15,6 +15,8 @@ interface UserResult {
     subskill: string;
     rating: string;
   }[];
+  available_capacity: number;
+  current_total_allocation: number;
 }
 
 interface Selection {
@@ -83,13 +85,13 @@ export function SkillExplorerTable({
               </div>
             </TableHead>
             <TableHead
-              className="cursor-pointer font-semibold text-base min-w-[140px] sticky left-[calc(48px+200px)] bg-muted z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20"
-              onClick={() => onSort("role")}
+              className="cursor-pointer font-semibold text-base min-w-[120px] sticky left-[calc(48px+200px)] bg-muted z-20 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] transition-all duration-200 hover:bg-muted/80 border-r border-border/20"
+              onClick={() => onSort("availability")}
             >
               <div className="flex items-center gap-2 py-1">
-                Role
+                Available
                 <ArrowUpDown
-                  className={`h-4 w-4 transition-opacity ${sortField === "role" ? "opacity-100" : "opacity-50"}`}
+                  className={`h-4 w-4 transition-opacity ${sortField === "availability" ? "opacity-100" : "opacity-50"}`}
                 />
               </div>
             </TableHead>
@@ -146,7 +148,18 @@ export function SkillExplorerTable({
                   {user.full_name}
                 </TableCell>
                 <TableCell className="sticky left-[calc(48px+200px)] bg-card z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.05)] py-4 border-r border-border/20">
-                  <span className="text-base">{formatRole(user.role)}</span>
+                  <Badge 
+                    variant="secondary"
+                    className={`font-semibold text-sm ${
+                      user.available_capacity >= 50 
+                        ? 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30' 
+                        : user.available_capacity >= 25 
+                        ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30' 
+                        : 'bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/30'
+                    }`}
+                  >
+                    {user.available_capacity}%
+                  </Badge>
                 </TableCell>
                 {selections.map((selection) => {
                   const userSkill = user.approved_skills.find((s) => s.subskill === selection.subskill);

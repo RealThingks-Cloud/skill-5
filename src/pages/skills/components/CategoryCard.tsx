@@ -374,6 +374,7 @@ export const CategoryCard = ({
         categoryName={category.name}
         ratingType={drilldownType}
         records={drilldownRecords}
+        onRefresh={onRefresh}
       />
     </>;
 };

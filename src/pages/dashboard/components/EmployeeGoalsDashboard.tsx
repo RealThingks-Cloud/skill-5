@@ -192,7 +192,7 @@ export const EmployeeGoalsDashboard = () => {
                   New Goal
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-[min(448px,90vw)] w-full max-h-[90vh] overflow-hidden flex flex-col">
                 <DialogHeader>
                   <DialogTitle>🎯 Create Personal Goal</DialogTitle>
                 </DialogHeader>

@@ -9,6 +9,42 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
   }
+
+  /* Interactive Hover Effects */
+  .hover-lift {
+    @apply transition-all duration-250 ease-in-out hover:-translate-y-0.5 hover:shadow-md;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-250 ease-in-out hover:scale-[1.02] active:scale-[0.98];
+  }
+
+  .hover-glow {
+    @apply transition-all duration-250 ease-in-out hover:shadow-lg hover:shadow-primary/20;
+  }
+
+  /* Button Interactions */
+  .btn-press {
+    @apply active:scale-95 transition-transform duration-150 ease-in-out;
+  }
+
+  /* Smooth Transitions */
+  .transition-smooth {
+    @apply transition-all duration-250 ease-in-out;
+  }
+
+  .transition-bounce {
+    @apply transition-all duration-250 ease-[cubic-bezier(0.34,1.56,0.64,1)];
+  }
+
+  /* Loading States */
+  .skeleton {
+    @apply animate-pulse bg-muted;
+  }
+
+  .shimmer {
+    @apply animate-shimmer bg-gradient-to-r from-muted via-muted-foreground/10 to-muted bg-[length:1000px_100%];
+  }
 }
 
 /* Skill Matrix Design System - Professional Corporate Theme */

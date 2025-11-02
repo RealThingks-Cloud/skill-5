@@ -35,11 +35,11 @@ export const useDashboard = () => {
   
   const [loading, setLoading] = useState(true);
 
-  const fetchDashboardStats = async () => {
+  const fetchDashboardStats = async (showLoading = false) => {
     if (!profile) return;
     
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       
       // Get total team members
       const { data: profiles } = await supabase
@@ -115,7 +115,7 @@ export const useDashboard = () => {
   };
 
   useEffect(() => {
-    fetchDashboardStats();
+    fetchDashboardStats(true); // Show loading only on initial mount
   }, [profile]);
   
   return {

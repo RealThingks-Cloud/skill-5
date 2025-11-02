@@ -16,7 +16,7 @@ import Projects from "./pages/projects";
 import Reports from "./pages/reports";
 import Admin from "./pages/admin";
 import Profile from "./pages/Profile";
-import Notifications from "./pages/notifications";
+import Notifications from "./pages/Notifications";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import NoAccess from "./pages/NoAccess";

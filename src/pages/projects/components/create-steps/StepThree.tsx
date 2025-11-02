@@ -18,8 +18,18 @@ export default function StepThree({
   const [loading, setLoading] = useState(true);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   useEffect(() => {
-    loadMatches();
-  }, []);
+    if (formData.required_skills.length > 0) {
+      loadMatches();
+    }
+  }, [formData.required_skills]);
+
+  // Refresh matches when members change to get real-time allocation data
+  useEffect(() => {
+    if (formData.required_skills.length > 0 && matches.length > 0) {
+      // Refresh allocation data silently
+      loadMatches();
+    }
+  }, [formData.members.length]);
   const loadMatches = async () => {
     try {
       setLoading(true);
@@ -32,18 +42,22 @@ export default function StepThree({
       setLoading(false);
     }
   };
-  const addMember = (userId: string, allocation: AllocationPercentage) => {
-    const match = matches.find(m => m.user_id === userId);
-    if (!match) return;
-    if (allocation > match.available_capacity) {
-      toast.error(`${match.full_name} only has ${match.available_capacity}% capacity available`);
+  const addMember = async (userId: string, allocation: AllocationPercentage) => {
+    // Fetch fresh allocation data before adding
+    const freshAllocation = await projectService.getUserCapacity(userId);
+    const availableCapacity = freshAllocation?.available || 100;
+    
+    if (allocation > availableCapacity) {
+      toast.error(`Only ${availableCapacity}% capacity available for this user`);
       return;
     }
+    
     const exists = formData.members.some(m => m.user_id === userId);
     if (exists) {
       toast.error('User already added');
       return;
     }
+    
     setFormData({
       ...formData,
       members: [...formData.members, {
@@ -58,13 +72,16 @@ export default function StepThree({
       members: formData.members.filter(m => m.user_id !== userId)
     });
   };
-  const updateAllocation = (userId: string, allocation: AllocationPercentage) => {
-    const match = matches.find(m => m.user_id === userId);
-    if (!match) return;
-    if (allocation > match.available_capacity) {
-      toast.error(`${match.full_name} only has ${match.available_capacity}% capacity available`);
+  const updateAllocation = async (userId: string, allocation: AllocationPercentage) => {
+    // Fetch fresh allocation data before updating
+    const freshAllocation = await projectService.getUserCapacity(userId);
+    const availableCapacity = freshAllocation?.available || 100;
+    
+    if (allocation > availableCapacity) {
+      toast.error(`Only ${availableCapacity}% capacity available for this user`);
       return;
     }
+    
     setFormData({
       ...formData,
       members: formData.members.map(m => m.user_id === userId ? {
@@ -84,31 +101,39 @@ export default function StepThree({
     return '🔴';
   };
   if (loading) {
-    return <div className="flex items-center justify-center py-12">
+    return <div className="flex items-center justify-center h-full min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>;
   }
-  return <div className="space-y-6">
-      <div>
-        <h3 className="font-semibold mb-2">Assigned Members ({formData.members.length})</h3>
-        {formData.members.length === 0 ? <p className="text-sm text-muted-foreground">No members assigned yet</p> : <div className="space-y-2">
+  return <div className="space-y-1.5 h-full flex flex-col min-h-0">
+      <div className="flex-shrink-0">
+        <h3 className="text-xs font-semibold mb-0.5">Assigned Members ({formData.members.length})</h3>
+        {formData.members.length === 0 ? <p className="text-xs text-muted-foreground">No members assigned yet</p> : <div className="space-y-0.5 max-h-[120px] overflow-y-auto pr-1">
             {formData.members.map(member => {
           const match = matches.find(m => m.user_id === member.user_id);
           if (!match) return null;
-          return <div key={member.user_id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium">{match.full_name}</p>
-                    <p className="text-sm text-muted-foreground">{match.email}</p>
+          
+          // Calculate remaining after this assignment
+          const remainingAfterAssignment = match.available_capacity - member.allocation_percentage;
+          const remainingColor = remainingAfterAssignment >= 50 ? 'text-green-600' : 
+                                 remainingAfterAssignment >= 25 ? 'text-yellow-600' : 'text-red-600';
+          
+          return <div key={member.user_id} className="flex items-center justify-between p-1 border rounded">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">{match.full_name}</p>
+                    <p className={`text-xs ${remainingColor}`}>
+                      {match.available_capacity}% available
+                    </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <select value={member.allocation_percentage} onChange={e => updateAllocation(member.user_id, Number(e.target.value) as AllocationPercentage)} className="text-sm border rounded px-2 py-1">
+                  <div className="flex items-center gap-1">
+                    <select value={member.allocation_percentage} onChange={e => updateAllocation(member.user_id, Number(e.target.value) as AllocationPercentage)} className="text-xs border rounded px-1 py-0.5">
                       <option value={25}>25%</option>
                       <option value={50}>50%</option>
                       <option value={75}>75%</option>
                       <option value={100}>100%</option>
                     </select>
-                    <Button size="sm" variant="ghost" onClick={() => removeMember(member.user_id)}>
-                      <X className="h-4 w-4" />
+                    <Button size="sm" variant="ghost" className="h-5 w-5 p-0" onClick={() => removeMember(member.user_id)}>
+                      <X className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>;
@@ -116,60 +141,60 @@ export default function StepThree({
           </div>}
       </div>
 
-      <div>
-        <h3 className="font-semibold mb-2">Suggested Employees</h3>
-        <div className="space-y-2 max-h-96 overflow-y-auto">
+      <div className="flex-1 min-h-0 flex flex-col">
+        <h3 className="text-xs font-semibold mb-0.5 flex-shrink-0">Suggested Employees</h3>
+        <div className="space-y-1 flex-1 overflow-y-auto pr-1">
           {matches.map(match => {
           const isAssigned = formData.members.some(m => m.user_id === match.user_id);
           const isExpanded = expandedUserId === match.user_id;
           return <div key={match.user_id} className="border rounded-lg">
-                <div className="p-3">
+                <div className="p-1.5">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">{match.full_name}</p>
-                        <Badge variant={match.match_percentage >= 70 ? 'default' : 'secondary'}>
+                      <div className="flex items-center gap-1">
+                        <p className="text-xs font-medium">{match.full_name}</p>
+                        <Badge variant={match.match_percentage >= 70 ? 'default' : 'secondary'} className="text-xs h-4 px-1">
                           {match.match_percentage}% match
                         </Badge>
-                        <span className="text-lg">{getCapacityBadge(match.available_capacity)}</span>
+                        <span className="text-sm">{getCapacityBadge(match.available_capacity)}</span>
                       </div>
                       
-                      <div className="mt-2">
-                        <div className="flex items-center gap-2 text-sm">
+                      <div className="mt-1">
+                        <div className="flex items-center gap-1 text-xs">
                           <span className={getCapacityColor(match.available_capacity)}>
                             {match.available_capacity}% available
                           </span>
                           <span className="text-muted-foreground">({match.current_total_allocation}% allocated)</span>
                         </div>
-                        <Progress value={match.current_total_allocation} className="mt-1 h-2" />
+                        <Progress value={match.current_total_allocation} className="mt-0.5 h-1" />
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1">
                       {!isAssigned && <>
-                          <Button size="sm" variant="outline" onClick={() => addMember(match.user_id, 25)}>
+                          <Button size="sm" variant="outline" className="h-6 px-1.5 text-xs" onClick={() => addMember(match.user_id, 25)}>
                             + 25%
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => addMember(match.user_id, 50)}>
+                          <Button size="sm" variant="outline" className="h-6 px-1.5 text-xs" onClick={() => addMember(match.user_id, 50)}>
                             + 50%
                           </Button>
                         </>}
-                      <Button size="sm" variant="ghost" onClick={() => setExpandedUserId(isExpanded ? null : match.user_id)}>
+                      <Button size="sm" variant="ghost" className="h-6 px-1.5 text-xs" onClick={() => setExpandedUserId(isExpanded ? null : match.user_id)}>
                         {isExpanded ? 'Hide' : 'Details'}
                       </Button>
                     </div>
                   </div>
 
-                  {isExpanded && <div className="mt-3 pt-3 border-t space-y-1">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase">Skill Match Details</p>
-                      {match.skill_details.map((detail, idx) => <div key={idx} className="flex items-center justify-between text-sm">
+                  {isExpanded && <div className="mt-1.5 pt-1.5 border-t space-y-0.5">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-0.5">Skill Match Details</p>
+                      {match.skill_details.map((detail, idx) => <div key={idx} className="flex items-center justify-between text-xs py-0.5">
                           <span className="text-muted-foreground">
                             {detail.skill_name} → {detail.subskill_name}
                           </span>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={detail.matches ? 'default' : 'destructive'} className="text-xs">
+                          <div className="flex items-center gap-1">
+                            <Badge variant={detail.matches ? 'default' : 'destructive'} className="text-xs h-4 px-1">
                               {detail.user_rating.toUpperCase()} / {detail.required_rating.toUpperCase()}
                             </Badge>
-                            {detail.matches ? <Check className="h-4 w-4 text-green-600" /> : <X className="h-4 w-4 text-red-600" />}
+                            {detail.matches ? <Check className="h-3 w-3 text-green-600" /> : <X className="h-3 w-3 text-red-600" />}
                           </div>
                         </div>)}
                     </div>}

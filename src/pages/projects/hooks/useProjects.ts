@@ -7,9 +7,9 @@ export const useProjects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const data = await projectService.getAllProjects();
       setProjects(data);
     } catch (error) {
@@ -35,7 +35,7 @@ export const useProjects = () => {
   };
 
   useEffect(() => {
-    fetchProjects();
+    fetchProjects(true); // Show loading only on initial mount
   }, []);
 
   return {

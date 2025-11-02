@@ -18,11 +18,15 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     if (!authLoading && !isLoading && profile) {
       const currentRoute = location.pathname;
       
+      // Utility routes that should always be accessible
+      const publicUtilityRoutes = ['/profile', '/notifications'];
+      const isUtilityRoute = publicUtilityRoutes.some(route => currentRoute.startsWith(route));
+      
       // Only check access if accessMap has been loaded (not empty)
       // This prevents redirect during initial page load/refresh
       const accessMapLoaded = Object.keys(accessMap).length > 0;
       
-      if (accessMapLoaded && !hasAccess(currentRoute)) {
+      if (!isUtilityRoute && accessMapLoaded && !hasAccess(currentRoute)) {
         // Redirect to /skills if user doesn't have access
         navigate('/skills', { replace: true });
       }

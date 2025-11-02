@@ -42,9 +42,9 @@ export const useTechLeadStats = () => {
   const [loading, setLoading] = useState(false);
   const [techLeadStats, setTechLeadStats] = useState<TechLeadStats[]>([]);
 
-  const fetchTechLeadStats = async () => {
+  const fetchTechLeadStats = async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
 
       // First, get all unique tech lead IDs who have approved/rejected ratings
       const { data: techLeadData, error: techLeadError } = await supabase
@@ -159,7 +159,7 @@ export const useTechLeadStats = () => {
   };
 
   useEffect(() => {
-    fetchTechLeadStats();
+    fetchTechLeadStats(true); // Show loading only on initial mount
   }, []);
 
   return {
